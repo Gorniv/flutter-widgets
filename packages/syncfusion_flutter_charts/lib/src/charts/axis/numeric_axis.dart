@@ -558,7 +558,7 @@ class RenderNumericAxis extends RenderChartAxis {
   }
 
   // Maximum step count for visible labels.
-  static const int maxStepVisibleLabels = 200;
+  static int maxStepVisibleLabels = 100;
 
   @override
   void generateVisibleLabels() {
