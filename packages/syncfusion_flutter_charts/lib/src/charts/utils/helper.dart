@@ -2131,29 +2131,33 @@ String logAxisLabel(RenderLogarithmicAxis axis, num value, int showDigits) {
   return _labelValue(value, showDigits, axis.numberFormat, axis.labelFormat);
 }
 
-String _labelValue(num value, int showDigits, NumberFormat? numberFormat,
-    String? labelFormat) {
-  final List pieces = value.toString().split('.');
-  if (pieces.length > 1) {
-    value = double.parse(value.toStringAsFixed(showDigits));
-    final String decimals = pieces[1];
-    final bool isDecimalContainsZero = decimals == '0' ||
-        decimals == '00' ||
-        decimals == '000' ||
-        decimals == '0000' ||
-        decimals == '00000' ||
-        value % 1 == 0;
-    value = isDecimalContainsZero ? value.round() : value;
+String _labelValue(
+  num value,
+  int showDigits,
+  NumberFormat? numberFormat,
+  String? labelFormat,
+) {
+  // Use NumberFormat if provided (always takes priority)
+  if (numberFormat != null) {
+    final formatted = numberFormat.format(value);
+    return labelFormat?.replaceAll('{value}', formatted) ?? formatted;
   }
 
-  String text = value.toString();
-  if (numberFormat != null) {
-    text = numberFormat.format(value);
+  // Fast path: showDigits == 0 → round and skip decimals
+  if (showDigits == 0) {
+    value = value.round();
+    final String text = value.toString();
+    return labelFormat?.replaceAll('{value}', text) ?? text;
   }
-  if (labelFormat != null && labelFormat != '') {
-    text = labelFormat.replaceAll(RegExp('{value}'), text);
+
+  // For decimals: round to fixed digits
+  if (value is double) {
+    value = double.parse(value.toStringAsFixed(showDigits));
   }
-  return text;
+
+  final String text = value.toString();
+
+  return labelFormat?.replaceAll('{value}', text) ?? text;
 }
 
 RRect performLegendToggleAnimation(

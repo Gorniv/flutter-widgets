@@ -557,80 +557,105 @@ class RenderNumericAxis extends RenderChartAxis {
     return range.copyWith();
   }
 
+  // Maximum step count for visible labels.
+  static const int maxStepVisibleLabels = 200;
+
   @override
   void generateVisibleLabels() {
     hasTrimmedAxisLabel = false;
+
     if (visibleRange == null || visibleInterval == 0) {
       return;
     }
+
     final double extent = maximumLabelWidth ?? double.maxFinite;
     final bool isRtl = textDirection == TextDirection.rtl;
-    num current = visibleRange!.minimum;
     final num visibleMinimum = visibleRange!.minimum;
     final num visibleMaximum = visibleRange!.maximum;
-    while (current <= visibleMaximum) {
-      if (current < visibleMinimum ||
-          !effectiveVisibleRange!.contains(current)) {
-        current += visibleInterval;
+    final int stepCount =
+        ((visibleMaximum - visibleMinimum) / visibleInterval).ceil();
+
+    final TextStyle baseStyle =
+        chartThemeData!.axisLabelTextStyle!.merge(labelStyle);
+    int delta = 1;
+    if (stepCount > maxStepVisibleLabels) {
+      delta = (stepCount / maxStepVisibleLabels).ceil();
+    }
+    bool lastValue = false;
+    for (int i = 0; i <= stepCount; i = i + delta) {
+      final num current = visibleMinimum + i * visibleInterval;
+      if (current == visibleMaximum) {
+        lastValue = true;
+      }
+      if (!effectiveVisibleRange!.contains(current)) {
         continue;
       }
 
-      num currentValue = current;
-      final String currentText = currentValue.toString();
-      final List<String> pieces = currentText.split('.');
-      final int piecesLength = pieces.length;
-      int digits = piecesLength >= 2 ? pieces[1].length : 0;
-      digits = digits > 20 ? 20 : digits;
-      currentValue = currentText.contains('e')
-          ? currentValue
-          : num.tryParse(currentValue.toStringAsFixed(digits))!;
-
-      String text = numericAxisLabel(this, currentValue, decimalPlaces);
-      if (_dependentIsStacked) {
-        text = '$text%';
-      }
-      String callbackText = text;
-      TextStyle callbackTextStyle =
-          chartThemeData!.axisLabelTextStyle!.merge(labelStyle);
-      if (axisLabelFormatter != null) {
-        final AxisLabelRenderDetails details = AxisLabelRenderDetails(
-            current, callbackText, callbackTextStyle, this, null, null);
-        final ChartAxisLabel label = axisLabelFormatter!(details);
-        callbackText = label.text;
-        callbackTextStyle = callbackTextStyle.merge(label.textStyle);
-      }
-
-      Size textSize = measureText(callbackText, callbackTextStyle, 0);
-      String textAfterTrimming = callbackText;
-      if (extent.isFinite && textSize.width > extent) {
-        textAfterTrimming = trimmedText(
-          callbackText,
-          callbackTextStyle,
-          extent,
-          labelRotation,
-          isRtl: isRtl,
-        );
-      }
-
-      textSize =
-          measureText(textAfterTrimming, callbackTextStyle, labelRotation);
-      final bool isTextTrimmed = callbackText != textAfterTrimming;
-      final AxisLabel label = AxisLabel(
-        callbackTextStyle,
-        textSize,
-        callbackText,
-        current,
-        isTextTrimmed ? textAfterTrimming : null,
-        textAfterTrimming,
-      );
-      visibleLabels.add(label);
-      if (isTextTrimmed) {
-        hasTrimmedAxisLabel = true;
-      }
-      current += visibleInterval;
+      _fillLabel(current, baseStyle, extent, isRtl);
+    }
+    if (!lastValue) {
+      _fillLabel(visibleMaximum, baseStyle, extent, isRtl);
     }
 
     super.generateVisibleLabels();
+  }
+
+  void _fillLabel(num current, TextStyle baseStyle, double extent, bool isRtl) {
+    final num currentValue = current;
+
+    // Format label value using decimalPlaces or formatter
+    String text = numericAxisLabel(this, currentValue, decimalPlaces);
+    if (_dependentIsStacked) {
+      text = '$text%';
+    }
+
+    String callbackText = text;
+    TextStyle callbackTextStyle = baseStyle;
+
+    if (axisLabelFormatter != null) {
+      final AxisLabelRenderDetails details = AxisLabelRenderDetails(
+        current,
+        callbackText,
+        callbackTextStyle,
+        this,
+        null,
+        null,
+      );
+      final ChartAxisLabel formatted = axisLabelFormatter!(details);
+      callbackText = formatted.text;
+      callbackTextStyle = callbackTextStyle.merge(formatted.textStyle);
+    }
+
+    // Only trim if necessary
+    String finalText = callbackText;
+    Size textSize = measureText(callbackText, callbackTextStyle, labelRotation);
+    bool isTextTrimmed = false;
+
+    if (extent.isFinite && textSize.width > extent) {
+      finalText = trimmedText(
+        callbackText,
+        callbackTextStyle,
+        extent,
+        labelRotation,
+        isRtl: isRtl,
+      );
+      isTextTrimmed = finalText != callbackText;
+
+      if (isTextTrimmed) {
+        hasTrimmedAxisLabel = true;
+        textSize = measureText(finalText, callbackTextStyle, labelRotation);
+      }
+    }
+
+    final AxisLabel label = AxisLabel(
+      callbackTextStyle,
+      textSize,
+      callbackText,
+      current,
+      isTextTrimmed ? finalText : null,
+      finalText,
+    );
+    visibleLabels.add(label);
   }
 
   @override
