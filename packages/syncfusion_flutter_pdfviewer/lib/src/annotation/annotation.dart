@@ -6,16 +6,17 @@ import 'annotation_view.dart';
 import 'text_markup.dart';
 
 /// Callback definition for annotation property change.
-typedef AnnotationPropertyChangedCallback = void Function(
-  Annotation annotation,
-  String propertyName,
-  Object oldValue,
-  Object newValue,
-);
+typedef AnnotationPropertyChangedCallback =
+    void Function(
+      Annotation annotation,
+      String propertyName,
+      Object oldValue,
+      Object newValue,
+    );
 
 /// Callback definition for annotation property change.
-typedef AnnotationPropertyChangingCallback = bool Function(
-    Annotation annotation, String propertyName);
+typedef AnnotationPropertyChangingCallback =
+    bool Function(Annotation annotation, String propertyName);
 
 /// Represents a PDF annotation.
 abstract class Annotation extends ChangeNotifier {
@@ -99,9 +100,10 @@ extension AnnotationExtension on Annotation {
   Rect get boundingBox => _boundingBox;
 
   /// Returns the [Rect] bounds of the [Annotation].
-  Rect get uiBounds => isSelected
-      ? _intermediateBounds.inflate(selectionBorderMargin)
-      : _boundingBox.inflate(selectionBorderMargin);
+  Rect get uiBounds =>
+      isSelected
+          ? _intermediateBounds.inflate(selectionBorderMargin)
+          : _boundingBox.inflate(selectionBorderMargin);
 
   /// Return the global bounds of the [Annotation].
   Rect get globalRect => _globalRect;

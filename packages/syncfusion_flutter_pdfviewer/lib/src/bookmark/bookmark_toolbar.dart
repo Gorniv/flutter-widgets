@@ -62,9 +62,10 @@ class _BookmarkToolbarState extends State<BookmarkToolbar> {
   void didChangeDependencies() {
     _pdfViewerThemeData = SfPdfViewerTheme.of(context);
     _isMaterial3 = Theme.of(context).useMaterial3;
-    _effectiveThemeData = Theme.of(context).useMaterial3
-        ? SfPdfViewerThemeDataM3(context)
-        : SfPdfViewerThemeDataM2(context);
+    _effectiveThemeData =
+        Theme.of(context).useMaterial3
+            ? SfPdfViewerThemeDataM3(context)
+            : SfPdfViewerThemeDataM2(context);
     _localizations = SfLocalizations.of(context);
     super.didChangeDependencies();
   }
@@ -98,19 +99,21 @@ class _BookmarkToolbarState extends State<BookmarkToolbar> {
         height: _kPdfHeaderBarHeight,
         margin: const EdgeInsets.only(bottom: 3),
         decoration: BoxDecoration(
-          color: _pdfViewerThemeData!.bookmarkViewStyle?.headerBarColor ??
+          color:
+              _pdfViewerThemeData!.bookmarkViewStyle?.headerBarColor ??
               _effectiveThemeData!.bookmarkViewStyle?.headerBarColor ??
               ((Theme.of(context).colorScheme.brightness == Brightness.light)
                   ? const Color(0xFFFAFAFA)
                   : const Color(0xFF424242)),
           boxShadow: _isMaterial3 ? null : boxShadows,
-          border: _isMaterial3
-              ? Border(
-                  bottom: BorderSide(
-                    color: Theme.of(context).colorScheme.outlineVariant,
-                  ),
-                )
-              : null,
+          border:
+              _isMaterial3
+                  ? Border(
+                    bottom: BorderSide(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                    ),
+                  )
+                  : null,
         ),
         child: Stack(
           children: <Widget>[
@@ -121,19 +124,19 @@ class _BookmarkToolbarState extends State<BookmarkToolbar> {
               height: _kPdfHeaderTextHeight,
               child: Text(
                 _localizations!.pdfBookmarksLabel,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium!
+                style: Theme.of(context).textTheme.titleMedium!
                     .copyWith(
                       fontSize: 16,
-                      color: Theme.of(context).brightness == Brightness.light
-                          ? Colors.black.withValues(alpha: 0.87)
-                          : Colors.white.withValues(alpha: 0.87),
+                      color:
+                          Theme.of(context).brightness == Brightness.light
+                              ? Colors.black.withValues(alpha: 0.87)
+                              : Colors.white.withValues(alpha: 0.87),
                     )
                     .merge(
                       _pdfViewerThemeData!.bookmarkViewStyle?.headerTextStyle ??
                           _effectiveThemeData!
-                              .bookmarkViewStyle?.headerTextStyle,
+                              .bookmarkViewStyle
+                              ?.headerTextStyle,
                     ),
                 semanticsLabel: '',
               ),
@@ -151,8 +154,8 @@ class _BookmarkToolbarState extends State<BookmarkToolbar> {
                 child: Icon(
                   Icons.close,
                   size: _kPdfCloseIconSize,
-                  color: _pdfViewerThemeData!
-                          .bookmarkViewStyle?.closeIconColor ??
+                  color:
+                      _pdfViewerThemeData!.bookmarkViewStyle?.closeIconColor ??
                       _effectiveThemeData!.bookmarkViewStyle?.closeIconColor ??
                       Theme.of(
                         context,

@@ -42,7 +42,7 @@ class URLPDFSource extends PDFSource {
   /// The [url] parameter must not be null or empty.
   /// The [headers] parameter can be used to add custom HTTP headers to the request.
   URLPDFSource(String url, {Map<String, String>? headers})
-      : assert(url.isNotEmpty) {
+    : assert(url.isNotEmpty) {
     _url = url;
     _headers = headers;
   }
@@ -98,7 +98,7 @@ class AssetPDFSource extends PDFSource {
   /// The [assetPath] parameter must not be null or empty.
   /// The [bundle] parameter is optional. If not provided, the default asset bundle will be used.
   AssetPDFSource(String assetPath, {AssetBundle? bundle})
-      : assert(assetPath.isNotEmpty) {
+    : assert(assetPath.isNotEmpty) {
     _pdfPath = assetPath;
     _bundle = bundle;
   }
@@ -111,9 +111,10 @@ class AssetPDFSource extends PDFSource {
   @override
   Future<Uint8List> getBytes(BuildContext context) async {
     if (_documentBytes == null) {
-      final ByteData bytes = await ((_bundle != null)
-          ? _bundle!.load(_pdfPath)
-          : DefaultAssetBundle.of(context).load(_pdfPath));
+      final ByteData bytes =
+          await ((_bundle != null)
+              ? _bundle!.load(_pdfPath)
+              : DefaultAssetBundle.of(context).load(_pdfPath));
       _documentBytes = bytes.buffer.asUint8List();
     }
     return Future<Uint8List>.value(_documentBytes);

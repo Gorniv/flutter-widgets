@@ -114,10 +114,12 @@ class _BookmarkItemState extends State<BookmarkItem> {
   @override
   void didChangeDependencies() {
     _pdfViewerThemeData = SfPdfViewerTheme.of(context);
-    _effectiveThemeData = Theme.of(context).useMaterial3
-        ? SfPdfViewerThemeDataM3(context)
-        : SfPdfViewerThemeDataM2(context);
-    _color = _pdfViewerThemeData!.bookmarkViewStyle?.backgroundColor ??
+    _effectiveThemeData =
+        Theme.of(context).useMaterial3
+            ? SfPdfViewerThemeDataM3(context)
+            : SfPdfViewerThemeDataM2(context);
+    _color =
+        _pdfViewerThemeData!.bookmarkViewStyle?.backgroundColor ??
         _effectiveThemeData!.bookmarkViewStyle?.backgroundColor ??
         (Theme.of(context).colorScheme.brightness == Brightness.light
             ? Colors.white
@@ -133,7 +135,8 @@ class _BookmarkItemState extends State<BookmarkItem> {
   }
 
   void _handleBackToParent() {
-    _color = _pdfViewerThemeData!.bookmarkViewStyle?.backgroundColor ??
+    _color =
+        _pdfViewerThemeData!.bookmarkViewStyle?.backgroundColor ??
         _effectiveThemeData!.bookmarkViewStyle?.backgroundColor ??
         (Theme.of(context).colorScheme.brightness == Brightness.light
             ? Colors.white
@@ -142,7 +145,8 @@ class _BookmarkItemState extends State<BookmarkItem> {
   }
 
   void _handleExpandBookmarkList() {
-    _color = _pdfViewerThemeData!.bookmarkViewStyle?.backgroundColor ??
+    _color =
+        _pdfViewerThemeData!.bookmarkViewStyle?.backgroundColor ??
         _effectiveThemeData!.bookmarkViewStyle?.backgroundColor ??
         (Theme.of(context).colorScheme.brightness == Brightness.light
             ? Colors.white
@@ -163,7 +167,8 @@ class _BookmarkItemState extends State<BookmarkItem> {
       if (kIsDesktop && !widget.isMobileWebView) {
         _color = const Color(0xFF000000).withValues(alpha: 0.08);
       } else {
-        _color = _pdfViewerThemeData!.bookmarkViewStyle?.selectionColor! ??
+        _color =
+            _pdfViewerThemeData!.bookmarkViewStyle?.selectionColor! ??
             _effectiveThemeData!.bookmarkViewStyle?.selectionColor! ??
             ((Theme.of(context).colorScheme.brightness == Brightness.light)
                 ? const Color.fromRGBO(0, 0, 0, 0.08)
@@ -178,7 +183,8 @@ class _BookmarkItemState extends State<BookmarkItem> {
 
   void _handleCancelSelectionColor() {
     setState(() {
-      _color = _pdfViewerThemeData!.bookmarkViewStyle?.backgroundColor ??
+      _color =
+          _pdfViewerThemeData!.bookmarkViewStyle?.backgroundColor ??
           _effectiveThemeData!.bookmarkViewStyle?.backgroundColor ??
           (Theme.of(context).colorScheme.brightness == Brightness.light
               ? Colors.white
@@ -197,22 +203,26 @@ class _BookmarkItemState extends State<BookmarkItem> {
       child: Container(
         height: widget.height,
         color: _color,
-        foregroundDecoration: widget.isBorderEnabled
-            ? BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: _pdfViewerThemeData!
-                            .bookmarkViewStyle?.titleSeparatorColor ??
-                        _effectiveThemeData!
-                            .bookmarkViewStyle?.titleSeparatorColor ??
-                        ((Theme.of(context).colorScheme.brightness ==
-                                Brightness.light)
-                            ? const Color.fromRGBO(0, 0, 0, 0.16)
-                            : const Color.fromRGBO(255, 255, 255, 0.16)),
+        foregroundDecoration:
+            widget.isBorderEnabled
+                ? BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color:
+                          _pdfViewerThemeData!
+                              .bookmarkViewStyle
+                              ?.titleSeparatorColor ??
+                          _effectiveThemeData!
+                              .bookmarkViewStyle
+                              ?.titleSeparatorColor ??
+                          ((Theme.of(context).colorScheme.brightness ==
+                                  Brightness.light)
+                              ? const Color.fromRGBO(0, 0, 0, 0.16)
+                              : const Color.fromRGBO(255, 255, 255, 0.16)),
+                    ),
                   ),
-                ),
-              )
-            : const BoxDecoration(),
+                )
+                : const BoxDecoration(),
         child: Stack(
           children: <Widget>[
             Visibility(
@@ -227,8 +237,8 @@ class _BookmarkItemState extends State<BookmarkItem> {
                   child: Icon(
                     Icons.arrow_back,
                     size: _kPdfBackIconSize,
-                    color: _pdfViewerThemeData!
-                            .bookmarkViewStyle?.backIconColor ??
+                    color:
+                        _pdfViewerThemeData!.bookmarkViewStyle?.backIconColor ??
                         _effectiveThemeData!.bookmarkViewStyle?.backIconColor ??
                         Theme.of(
                           context,
@@ -245,14 +255,13 @@ class _BookmarkItemState extends State<BookmarkItem> {
               child: Text(
                 widget.title,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium!
+                style: Theme.of(context).textTheme.bodyMedium!
                     .copyWith(
                       fontSize: 14,
-                      color: Theme.of(context).brightness == Brightness.light
-                          ? Colors.black.withValues(alpha: 0.87)
-                          : Colors.white.withValues(alpha: 0.87),
+                      color:
+                          Theme.of(context).brightness == Brightness.light
+                              ? Colors.black.withValues(alpha: 0.87)
+                              : Colors.white.withValues(alpha: 0.87),
                     )
                     .merge(
                       _pdfViewerThemeData!.bookmarkViewStyle?.titleTextStyle,
@@ -271,10 +280,13 @@ class _BookmarkItemState extends State<BookmarkItem> {
                   child: Icon(
                     Icons.arrow_forward_ios,
                     size: _kPdfExpandIconSize,
-                    color: _pdfViewerThemeData!
-                            .bookmarkViewStyle?.navigationIconColor ??
+                    color:
+                        _pdfViewerThemeData!
+                            .bookmarkViewStyle
+                            ?.navigationIconColor ??
                         _effectiveThemeData!
-                            .bookmarkViewStyle?.navigationIconColor ??
+                            .bookmarkViewStyle
+                            ?.navigationIconColor ??
                         Theme.of(
                           context,
                         ).colorScheme.onSurface.withValues(alpha: 0.54),
@@ -292,16 +304,18 @@ class _BookmarkItemState extends State<BookmarkItem> {
         cursor: SystemMouseCursors.click,
         onEnter: (PointerEnterEvent details) {
           setState(() {
-            _color = Theme.of(context).useMaterial3
-                ? Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withValues(alpha: 0.08)
-                : const Color(0xFF000000).withValues(alpha: 0.04);
+            _color =
+                Theme.of(context).useMaterial3
+                    ? Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.08)
+                    : const Color(0xFF000000).withValues(alpha: 0.04);
           });
         },
         onExit: (PointerExitEvent details) {
           setState(() {
-            _color = _pdfViewerThemeData!.bookmarkViewStyle?.backgroundColor ??
+            _color =
+                _pdfViewerThemeData!.bookmarkViewStyle?.backgroundColor ??
                 _effectiveThemeData!.bookmarkViewStyle?.backgroundColor ??
                 (Theme.of(context).colorScheme.brightness == Brightness.light
                     ? Colors.white

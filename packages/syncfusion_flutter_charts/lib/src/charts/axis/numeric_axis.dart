@@ -77,9 +77,10 @@ class NumericAxis extends ChartAxis {
     super.axisLabelFormatter,
     this.onRendererCreated,
   }) : assert(
-            (initialVisibleMaximum == null && initialVisibleMinimum == null) ||
-                autoScrollingDelta == null,
-            'Both properties have the same behavior to display the visible data points, use any one of the properties');
+          (initialVisibleMaximum == null && initialVisibleMinimum == null) ||
+              autoScrollingDelta == null,
+          'Both properties have the same behavior to display the visible data points, use any one of the properties',
+        );
 
   /// Formats the numeric axis labels.
   ///
@@ -339,7 +340,9 @@ class NumericAxis extends ChartAxis {
 
   @override
   void updateRenderObject(
-      BuildContext context, RenderNumericAxis renderObject) {
+    BuildContext context,
+    RenderNumericAxis renderObject,
+  ) {
     super.updateRenderObject(context, renderObject);
     renderObject
       ..labelFormat = labelFormat
@@ -506,12 +509,18 @@ class RenderNumericAxis extends RenderChartAxis {
 
   @override
   DoubleRange updateAutoScrollingDelta(
-      int scrollingDelta, DoubleRange actualRange, DoubleRange visibleRange) {
+    int scrollingDelta,
+    DoubleRange actualRange,
+    DoubleRange visibleRange,
+  ) {
     if (initialVisibleMaximum != null || initialVisibleMinimum != null) {
       return visibleRange;
     }
-    return super
-        .updateAutoScrollingDelta(scrollingDelta, actualRange, visibleRange);
+    return super.updateAutoScrollingDelta(
+      scrollingDelta,
+      actualRange,
+      visibleRange,
+    );
   }
 
   @override
@@ -542,7 +551,10 @@ class RenderNumericAxis extends RenderChartAxis {
 
   @override
   DoubleRange applyRangePadding(
-      DoubleRange range, num interval, Size availableSize) {
+    DoubleRange range,
+    num interval,
+    Size availableSize,
+  ) {
     if (minimum != null && maximum != null) {
       return range;
     }
@@ -673,11 +685,14 @@ class RenderNumericAxis extends RenderChartAxis {
       final NumericMultiLevelLabel label = multiLevelLabels![i];
       assert(label.start <= label.end);
       _multilevelLabels.add(
-          AxisMultilevelLabel(label.text, label.level, label.start, label.end));
+        AxisMultilevelLabel(label.text, label.level, label.start, label.end),
+      );
     }
 
-    _multilevelLabels.sort((AxisMultilevelLabel a, AxisMultilevelLabel b) =>
-        a.level.compareTo(b.level));
+    _multilevelLabels.sort(
+      (AxisMultilevelLabel a, AxisMultilevelLabel b) =>
+          a.level.compareTo(b.level),
+    );
     final void Function(AxisMultilevelLabel label) add = invertElementsOrder
         ? (AxisMultilevelLabel label) =>
             visibleMultilevelLabels.insert(0, label)
@@ -694,7 +709,12 @@ class RenderNumericAxis extends RenderChartAxis {
         if (multiLevelLabelFormatter != null) {
           final MultiLevelLabelRenderDetails details =
               MultiLevelLabelRenderDetails(
-                  current.level, desiredText, desiredTextStyle, i, name);
+            current.level,
+            desiredText,
+            desiredTextStyle,
+            i,
+            name,
+          );
           final ChartAxisLabel label = multiLevelLabelFormatter!(details);
           desiredText = label.text;
           desiredTextStyle = textStyle.merge(label.textStyle);
