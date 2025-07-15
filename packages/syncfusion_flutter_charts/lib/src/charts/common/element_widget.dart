@@ -51,8 +51,11 @@ class RenderChartFadeTransition extends RenderAnimatedOpacity {
   }
 
   void refresh() {
-    markNeedsLayout();
-    (child as RenderChartElementStack?)?.refresh();
+    // Check if the render object is still attached before marking layout
+    if (attached) {
+      markNeedsLayout();
+      (child as RenderChartElementStack?)?.refresh();
+    }
   }
 
   void handlePointerHover(Offset localPosition) {
@@ -111,8 +114,11 @@ class RenderChartElementLayoutBuilder<T, D> extends RenderBox
   }
 
   void refresh() {
-    markNeedsBuild();
-    (child as RenderChartFadeTransition?)?.refresh();
+    // Check if the render object is still attached before marking layout
+    if (attached) {
+      markNeedsBuild();
+      (child as RenderChartFadeTransition?)?.refresh();
+    }
   }
 
   @override
@@ -195,7 +201,10 @@ class RenderChartElementStack extends RenderBox
   ChartMarker markerAt(int pointIndex) => ChartMarker();
 
   void refresh() {
-    markNeedsLayout();
+    // Check if the render object is still attached before marking layout
+    if (attached) {
+      markNeedsLayout();
+    }
   }
 
   void handlePointerHover(Offset localPosition) {}
@@ -212,13 +221,11 @@ class RenderChartElementStack extends RenderBox
 }
 
 abstract class CustomConstrainedLayoutBuilder<
-  ConstraintType extends Constraints
->
-    extends RenderObjectWidget {
+    ConstraintType extends Constraints> extends RenderObjectWidget {
   const CustomConstrainedLayoutBuilder({super.key, required this.builder});
 
   final Widget Function(BuildContext context, ConstraintType constraints)
-  builder;
+      builder;
 
   @override
   RenderObjectElement createElement() =>
@@ -227,7 +234,8 @@ abstract class CustomConstrainedLayoutBuilder<
   @protected
   bool updateShouldRebuild(
     covariant CustomConstrainedLayoutBuilder<ConstraintType> oldWidget,
-  ) => true;
+  ) =>
+      true;
 }
 
 class CustomLayoutBuilderElement<ConstraintType extends Constraints>
@@ -238,8 +246,7 @@ class CustomLayoutBuilderElement<ConstraintType extends Constraints>
 
   @override
   CustomRenderConstrainedLayoutBuilder<ConstraintType, RenderObject>
-  get renderObject =>
-      super.renderObject
+      get renderObject => super.renderObject
           as CustomRenderConstrainedLayoutBuilder<ConstraintType, RenderObject>;
 
   Element? _child;
@@ -304,10 +311,9 @@ class CustomLayoutBuilderElement<ConstraintType extends Constraints>
             ErrorDescription('building $widget'),
             e,
             stack,
-            informationCollector:
-                () => <DiagnosticsNode>[
-                  if (kDebugMode) DiagnosticsDebugCreator(DebugCreator(this)),
-                ],
+            informationCollector: () => <DiagnosticsNode>[
+              if (kDebugMode) DiagnosticsDebugCreator(DebugCreator(this)),
+            ],
           ),
         );
       }
@@ -320,10 +326,9 @@ class CustomLayoutBuilderElement<ConstraintType extends Constraints>
             ErrorDescription('building $widget'),
             e,
             stack,
-            informationCollector:
-                () => <DiagnosticsNode>[
-                  if (kDebugMode) DiagnosticsDebugCreator(DebugCreator(this)),
-                ],
+            informationCollector: () => <DiagnosticsNode>[
+              if (kDebugMode) DiagnosticsDebugCreator(DebugCreator(this)),
+            ],
           ),
         );
         _child = updateChild(null, built, slot);
@@ -355,18 +360,15 @@ class CustomLayoutBuilderElement<ConstraintType extends Constraints>
   @override
   void removeRenderObjectChild(RenderObject child, Object? slot) {
     final CustomRenderConstrainedLayoutBuilder<ConstraintType, RenderObject>
-    renderObject = this.renderObject;
+        renderObject = this.renderObject;
     assert(renderObject.child == child);
     renderObject.child = null;
     assert(renderObject == this.renderObject);
   }
 }
 
-mixin CustomRenderConstrainedLayoutBuilder<
-  ConstraintType extends Constraints,
-  ChildType extends RenderObject
->
-    on RenderObjectWithChildMixin<ChildType> {
+mixin CustomRenderConstrainedLayoutBuilder<ConstraintType extends Constraints,
+    ChildType extends RenderObject> on RenderObjectWithChildMixin<ChildType> {
   LayoutCallback<ConstraintType>? _callback;
 
   void updateCallback(LayoutCallback<ConstraintType>? value) {
@@ -374,14 +376,20 @@ mixin CustomRenderConstrainedLayoutBuilder<
       return;
     }
     _callback = value;
-    markNeedsLayout();
+    // Check if the render object is still attached before marking layout
+    if (attached) {
+      markNeedsLayout();
+    }
   }
 
   bool _needsBuild = true;
 
   void markNeedsBuild() {
     _needsBuild = true;
-    markNeedsLayout();
+    // Check if the render object is still attached before marking layout
+    if (attached) {
+      markNeedsLayout();
+    }
   }
 
   Constraints? _previousConstraints;
