@@ -894,6 +894,7 @@ class SfCircularChartState extends State<SfCircularChart>
                         (widget.tooltipBehavior!.color ??
                             _chartThemeData.tooltipColor)!,
                     showDuration: widget.tooltipBehavior!.duration.toInt(),
+                    showDelay: widget.tooltipBehavior!.showDelay,
                     shadowColor: widget.tooltipBehavior!.shadowColor,
                     elevation: widget.tooltipBehavior!.elevation,
                     animationDuration:

@@ -46,7 +46,7 @@ class _MyHomePageState extends State<_MyHomePage> {
             // Enable legend
             legend: Legend(isVisible: true),
             // Enable tooltip
-            tooltipBehavior: TooltipBehavior(enable: true),
+            tooltipBehavior: TooltipBehavior(enable: true, showDelay: 500),
             series: <CartesianSeries<_SalesData, String>>[
               LineSeries<_SalesData, String>(
                 dataSource: data,

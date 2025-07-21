@@ -7,8 +7,8 @@ import 'package:flutter/rendering.dart';
 
 import 'element_widget.dart';
 
-typedef TooltipWidgetBuilder =
-    Widget? Function(BuildContext, TooltipInfo?, Size);
+typedef TooltipWidgetBuilder = Widget? Function(
+    BuildContext, TooltipInfo?, Size);
 
 /// Holds details of a tooltip is shown.
 @immutable
@@ -89,6 +89,7 @@ class CoreTooltip extends StatefulWidget {
     required this.builder,
     this.animationDuration = 500,
     this.showDuration = 3000,
+    this.showDelay = 50,
     this.innerPadding = 5.0,
     this.color = Colors.black,
     this.borderColor = Colors.black,
@@ -104,6 +105,7 @@ class CoreTooltip extends StatefulWidget {
   final TooltipWidgetBuilder? builder;
   final int animationDuration;
   final int showDuration;
+  final int showDelay;
   final double innerPadding;
   final Color color;
   final Color borderColor;
@@ -134,6 +136,7 @@ class CoreTooltipState extends State<CoreTooltip>
   /// movement. To prevent this, we have delayed show method for 100ms.
   Timer? _desktopShowDelayTimer;
   Timer? _showTimer;
+  Timer? _showDelayTimer;
 
   void show(
     TooltipInfo info,
@@ -145,13 +148,25 @@ class CoreTooltipState extends State<CoreTooltip>
       if (immediately) {
         _show(info, kind);
       } else {
-        _desktopShowDelayTimer = Timer(const Duration(milliseconds: 50), () {
+        // Use user-defined showDelay for desktop, with minimum 50ms to prevent excessive hover events
+        final int effectiveDelay = widget.showDelay > 0 ? widget.showDelay : 50;
+        _desktopShowDelayTimer =
+            Timer(Duration(milliseconds: effectiveDelay), () {
           _show(info, kind);
           _desktopShowDelayTimer = null;
         });
       }
     } else {
-      _show(info, kind);
+      // Apply user-defined show delay for touch interactions
+      if (widget.showDelay > 0 && !immediately) {
+        _showDelayTimer?.cancel();
+        _showDelayTimer = Timer(Duration(milliseconds: widget.showDelay), () {
+          _show(info, kind);
+          _showDelayTimer = null;
+        });
+      } else {
+        _show(info, kind);
+      }
     }
   }
 
@@ -176,6 +191,7 @@ class CoreTooltipState extends State<CoreTooltip>
   }
 
   void hide({bool immediately = false}) {
+    _showDelayTimer?.cancel();
     immediately ? _controller.reset() : _controller.reverse();
     // (_tooltipKey.currentContext?.findRenderObject()
     //         as RenderConstrainedLayoutBuilder<BoxConstraints, RenderBox>?)
@@ -229,14 +245,14 @@ class CoreTooltipState extends State<CoreTooltip>
 
     _desktopShowDelayTimer?.cancel();
     _showTimer?.cancel();
+    _showDelayTimer?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final ThemeData chartThemeData = Theme.of(context);
-    _isDesktop =
-        kIsWeb ||
+    _isDesktop = kIsWeb ||
         chartThemeData.platform == TargetPlatform.macOS ||
         chartThemeData.platform == TargetPlatform.windows ||
         chartThemeData.platform == TargetPlatform.linux;
@@ -355,10 +371,9 @@ class _CoreTooltipRenderBox extends RenderProxyBox {
   final _RectangularShape _tooltipShape = const _RectangularShape();
 
   final Paint _fillPaint = Paint()..isAntiAlias = true;
-  final Paint _strokePaint =
-      Paint()
-        ..isAntiAlias = true
-        ..style = PaintingStyle.stroke;
+  final Paint _strokePaint = Paint()
+    ..isAntiAlias = true
+    ..style = PaintingStyle.stroke;
 
   Offset? _localPrimaryPosition;
   Offset? _localSecondaryPosition;
@@ -577,10 +592,9 @@ class _CoreTooltipRenderBox extends RenderProxyBox {
     final Rect surfaceBounds = _localEdgeBounds ?? paintBounds;
     child?.layout(constraints, parentUsesSize: true);
     _effectivePreferTooltipOnTop ??= _canPreferTooltipOnTop(surfaceBounds);
-    _nosePosition =
-        _effectivePreferTooltipOnTop!
-            ? _localPrimaryPosition?.translate(0.0, -_noseGap)
-            : _localSecondaryPosition?.translate(0.0, _noseGap);
+    _nosePosition = _effectivePreferTooltipOnTop!
+        ? _localPrimaryPosition?.translate(0.0, -_noseGap)
+        : _localSecondaryPosition?.translate(0.0, _noseGap);
     _validateNosePosition();
 
     _path = _tooltipShape.outerPath(
@@ -758,36 +772,30 @@ class _RectangularShape {
     double tooltipTriangleOffsetY = tooltipStartPoint - triangleHeight;
 
     final double endGlobal = surfaceBounds.right - innerPadding;
-    double rightLineWidth =
-        position.dx + halfTooltipWidth > endGlobal
-            ? endGlobal - position.dx
-            : halfTooltipWidth;
+    double rightLineWidth = position.dx + halfTooltipWidth > endGlobal
+        ? endGlobal - position.dx
+        : halfTooltipWidth;
     final double leftLineWidth =
         position.dx - halfTooltipWidth < surfaceBounds.left + innerPadding
             ? position.dx - surfaceBounds.left - innerPadding
             : tooltipWidth - rightLineWidth;
-    rightLineWidth =
-        leftLineWidth < halfTooltipWidth
-            ? halfTooltipWidth - leftLineWidth + rightLineWidth
-            : rightLineWidth;
+    rightLineWidth = leftLineWidth < halfTooltipWidth
+        ? halfTooltipWidth - leftLineWidth + rightLineWidth
+        : rightLineWidth;
 
-    double moveNosePoint =
-        leftLineWidth < tooltipWidth * 0.1
-            ? tooltipWidth * 0.1 - leftLineWidth
-            : 0.0;
-    moveNosePoint =
-        rightLineWidth < tooltipWidth * 0.1
-            ? -(tooltipWidth * 0.1 - rightLineWidth)
-            : moveNosePoint;
+    double moveNosePoint = leftLineWidth < tooltipWidth * 0.1
+        ? tooltipWidth * 0.1 - leftLineWidth
+        : 0.0;
+    moveNosePoint = rightLineWidth < tooltipWidth * 0.1
+        ? -(tooltipWidth * 0.1 - rightLineWidth)
+        : moveNosePoint;
 
-    double shiftText =
-        leftLineWidth > rightLineWidth
-            ? -(halfTooltipWidth - rightLineWidth)
-            : 0.0;
-    shiftText =
-        leftLineWidth < rightLineWidth
-            ? (halfTooltipWidth - leftLineWidth)
-            : shiftText;
+    double shiftText = leftLineWidth > rightLineWidth
+        ? -(halfTooltipWidth - rightLineWidth)
+        : 0.0;
+    shiftText = leftLineWidth < rightLineWidth
+        ? (halfTooltipWidth - leftLineWidth)
+        : shiftText;
 
     rightLineWidth = rightLineWidth + elevation;
     if (!preferTooltipOnTop) {

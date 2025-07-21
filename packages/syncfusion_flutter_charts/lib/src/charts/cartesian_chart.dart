@@ -1660,6 +1660,7 @@ class SfCartesianChartState extends State<SfCartesianChart>
                       (widget.tooltipBehavior!.color ??
                           _chartThemeData.tooltipColor)!,
                   showDuration: widget.tooltipBehavior!.duration.toInt(),
+                  showDelay: widget.tooltipBehavior!.showDelay,
                   shadowColor: widget.tooltipBehavior!.shadowColor,
                   elevation: widget.tooltipBehavior!.elevation,
                   animationDuration: widget.tooltipBehavior!.animationDuration,

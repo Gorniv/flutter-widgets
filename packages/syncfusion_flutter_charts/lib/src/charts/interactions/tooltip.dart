@@ -26,6 +26,7 @@ class TooltipBehavior extends ChartBehavior {
     this.borderColor = Colors.transparent,
     this.borderWidth = 1,
     this.duration = 3000,
+    this.showDelay = 50,
     this.shouldAlwaysShow = false,
     this.elevation = 2.5,
     this.canShowMarker = true,
@@ -453,6 +454,29 @@ class TooltipBehavior extends ChartBehavior {
   /// ```
   final double duration;
 
+  /// Delay before showing the tooltip.
+  ///
+  /// Defaults to `0`.
+  ///
+  /// ```dart
+  /// late TooltipBehavior tooltipBehavior;
+  ///
+  /// void initState() {
+  ///   tooltipBehavior = TooltipBehavior(
+  ///     enable: true,
+  ///     showDelay: 500
+  ///   );
+  ///   super.initState();
+  /// }
+  ///
+  /// Widget build(BuildContext context) {
+  ///   return SfCartesianChart(
+  ///     tooltipBehavior: tooltipBehavior
+  ///   );
+  /// }
+  /// ```
+  final int showDelay;
+
   /// Alignment of the text in the tooltip.
   ///
   /// Defaults to `ChartAlignment.center`.
@@ -614,9 +638,8 @@ class TooltipBehavior extends ChartBehavior {
           if (series is CartesianSeriesRenderer &&
               series.isVisible() &&
               series.enableTooltip) {
-            final ChartTooltipInfo? info =
-                series.tooltipInfoFromPointIndex(pointIndex)
-                    as ChartTooltipInfo?;
+            final ChartTooltipInfo? info = series
+                .tooltipInfoFromPointIndex(pointIndex) as ChartTooltipInfo?;
             if (info != null && series.index == seriesIndex) {
               baseXValue = (info.point as CartesianChartPoint).xValue;
               break;
@@ -633,9 +656,8 @@ class TooltipBehavior extends ChartBehavior {
           if (child is ChartSeriesRenderer &&
               child.isVisible() &&
               child.enableTooltip) {
-            final ChartTooltipInfo? info =
-                child.tooltipInfoFromPointIndex(pointIndex)
-                    as ChartTooltipInfo?;
+            final ChartTooltipInfo? info = child
+                .tooltipInfoFromPointIndex(pointIndex) as ChartTooltipInfo?;
             if (info != null && info.text != null) {
               if (child.index == seriesIndex) {
                 tooltipInfo ??= info;
@@ -672,9 +694,8 @@ class TooltipBehavior extends ChartBehavior {
               } else {
                 final int index = child.xValues.indexOf(baseXValue);
                 if (index >= 0) {
-                  final ChartTooltipInfo? info =
-                      child.tooltipInfoFromPointIndex(index)
-                          as ChartTooltipInfo?;
+                  final ChartTooltipInfo? info = child
+                      .tooltipInfoFromPointIndex(index) as ChartTooltipInfo?;
                   if (info != null && info.text != null) {
                     tooltipInfoList.add(info);
                   }
