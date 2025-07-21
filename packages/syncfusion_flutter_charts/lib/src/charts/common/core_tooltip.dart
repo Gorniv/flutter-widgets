@@ -4,6 +4,8 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/widgets.dart'; // уже есть, но нужно для OverlayEntry
+import 'package:flutter/scheduler.dart'; // добавлено
 
 import 'element_widget.dart';
 
@@ -177,6 +179,38 @@ class CoreTooltipState extends State<CoreTooltip>
   Timer? _desktopShowDelayTimer;
   Timer? _showTimer;
   Timer? _showDelayTimer;
+  OverlayEntry? _overlayEntry;
+  bool _isOverlayInserted = false;
+
+  void _insertOverlay() {
+    if (_isOverlayInserted) return;
+    _overlayEntry = OverlayEntry(
+      builder: (context) => _buildOverlayContent(context),
+    );
+    Overlay.of(context, rootOverlay: true).insert(_overlayEntry!);
+    _isOverlayInserted = true;
+  }
+
+  void _removeOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+    _isOverlayInserted = false;
+  }
+
+  void _markOverlayNeedsBuild() {
+    if (_overlayEntry == null) return;
+
+    final SchedulerPhase phase = SchedulerBinding.instance.schedulerPhase;
+    // Если находимся в фазах, когда перестраивать нельзя, откладываем на пост-фрейм.
+    if (phase == SchedulerPhase.idle ||
+        phase == SchedulerPhase.postFrameCallbacks) {
+      _overlayEntry!.markNeedsBuild();
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _overlayEntry?.markNeedsBuild();
+      });
+    }
+  }
 
   void show(
     TooltipInfo info,
@@ -228,11 +262,13 @@ class CoreTooltipState extends State<CoreTooltip>
         renderObject.markNeedsBuild();
       }
     }
+    _markOverlayNeedsBuild();
   }
 
   void hide({bool immediately = false}) {
     _showDelayTimer?.cancel();
     immediately ? _controller.reset() : _controller.reverse();
+    _markOverlayNeedsBuild();
   }
 
   void _startShowTimer() {
@@ -263,11 +299,14 @@ class CoreTooltipState extends State<CoreTooltip>
       curve: widget.animationCurve,
     );
 
+    WidgetsBinding.instance.addPostFrameCallback((_) => _insertOverlay());
+
     super.initState();
   }
 
   @override
   void dispose() {
+    _removeOverlay();
     _info = null;
     _isDesktop = false;
     _controller.dispose();
@@ -278,40 +317,51 @@ class CoreTooltipState extends State<CoreTooltip>
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
+  // ---------- построение основного виджета ----------
+  Widget _buildOverlayContent(BuildContext context) {
     final ThemeData chartThemeData = Theme.of(context);
     _isDesktop = kIsWeb ||
         chartThemeData.platform == TargetPlatform.macOS ||
         chartThemeData.platform == TargetPlatform.windows ||
         chartThemeData.platform == TargetPlatform.linux;
 
-    return Opacity(
-      opacity: widget.opacity,
-      child: CustomLayoutBuilder(
-        key: _tooltipKey,
-        builder: (BuildContext context, BoxConstraints constraints) {
-          return _CoreTooltipRenderObjectWidget(
-            primaryPosition: _info?.primaryPosition,
-            secondaryPosition: _info?.secondaryPosition,
-            edgeBounds: _info?.surfaceBounds,
-            innerPadding: widget.innerPadding,
-            color: widget.color,
-            borderColor: widget.borderColor,
-            borderWidth: widget.borderWidth,
-            shadowColor: widget.shadowColor,
-            elevation: widget.elevation,
-            shouldAlwaysShow: widget.shouldAlwaysShow,
-            triangleHeight: widget.triangleHeight,
-            preferTooltipOnTop: widget.preferTooltipOnTop,
-            isDesktop: _isDesktop,
-            deviceKind: _pointerDeviceKind,
-            state: this,
-            child: widget.builder?.call(context, _info, constraints.biggest),
-          );
-        },
+    return IgnorePointer(
+      ignoring: true,
+      child: Opacity(
+        opacity: widget.opacity,
+        child: CustomLayoutBuilder(
+          key: _tooltipKey,
+          builder: (BuildContext context, BoxConstraints constraints) {
+            return _CoreTooltipRenderObjectWidget(
+              primaryPosition: _info?.primaryPosition,
+              secondaryPosition: _info?.secondaryPosition,
+              edgeBounds: _info?.surfaceBounds,
+              innerPadding: widget.innerPadding,
+              color: widget.color,
+              borderColor: widget.borderColor,
+              borderWidth: widget.borderWidth,
+              shadowColor: widget.shadowColor,
+              elevation: widget.elevation,
+              shouldAlwaysShow: widget.shouldAlwaysShow,
+              triangleHeight: widget.triangleHeight,
+              preferTooltipOnTop: widget.preferTooltipOnTop,
+              isDesktop: _isDesktop,
+              deviceKind: _pointerDeviceKind,
+              state: this,
+              child:
+                  widget.builder?.call(context, _info, constraints.biggest),
+            );
+          },
+        ),
       ),
     );
+  }
+  // --------------------------------------------------
+
+  @override
+  Widget build(BuildContext context) {
+    // Tooltip живёт только в Overlay.
+    return const SizedBox.shrink();
   }
 }
 
@@ -564,7 +614,8 @@ class _CoreTooltipRenderBox extends RenderProxyBox {
   }
 
   void _onAnimationUpdate() {
-    markNeedsLayout();
+    // Only repaint; relayout here causes assertions when not in layout phase
+    markNeedsPaint();
   }
 
   @override
@@ -620,7 +671,10 @@ class _CoreTooltipRenderBox extends RenderProxyBox {
     }
 
     final Rect surfaceBounds = _localEdgeBounds ?? paintBounds;
-    child?.layout(constraints, parentUsesSize: true);
+    child?.layout(
+      BoxConstraints.loose(constraints.biggest), // allow child to size to its content
+      parentUsesSize: true,
+    );
     _effectivePreferTooltipOnTop ??= _canPreferTooltipOnTop(surfaceBounds);
     _nosePosition = _effectivePreferTooltipOnTop!
         ? _localPrimaryPosition?.translate(0.0, -_noseGap)
