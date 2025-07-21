@@ -133,7 +133,7 @@ class RenderBehaviorArea extends RenderBox
   RenderIndicatorArea? indicatorArea;
   RenderChartPlotArea? plotArea;
   RenderLoadingIndicator? _loadingIndicator;
-  TooltipOpacityRenderBox? _tooltip;
+  RenderOpacity? _tooltip;
   TrackballOpacityRenderBox? _trackball;
 
   ChartZoomingCallback? onZooming;
@@ -308,7 +308,7 @@ class RenderBehaviorArea extends RenderBox
     if (child is RenderLoadingIndicator) {
       _loadingIndicator = child;
     }
-    if (child is TooltipOpacityRenderBox) {
+    if (child is RenderOpacity) {
       _tooltip = child;
     }
     if (child is TrackballOpacityRenderBox) {
@@ -322,7 +322,7 @@ class RenderBehaviorArea extends RenderBox
     if (child is RenderLoadingIndicator) {
       _loadingIndicator = null;
     }
-    if (child is TooltipOpacityRenderBox) {
+    if (child is RenderOpacity) {
       _tooltip = null;
     }
     if (child is TrackballOpacityRenderBox) {

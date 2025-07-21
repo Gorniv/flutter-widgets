@@ -10,6 +10,67 @@ import 'element_widget.dart';
 typedef TooltipWidgetBuilder = Widget? Function(
     BuildContext, TooltipInfo?, Size);
 
+/// Function type for custom tooltip animations.
+/// 
+/// Parameters:
+/// - [canvas]: Canvas for drawing operations
+/// - [animationValue]: Current animation value (0.0 to 1.0)
+/// - [tooltipBounds]: Bounds of the tooltip
+/// - [nosePosition]: Position of the tooltip nose/arrow
+/// - [opacity]: Base opacity value
+/// 
+/// Returns effective opacity for the tooltip.
+typedef TooltipAnimationFunction = double Function(
+  Canvas canvas,
+  double animationValue,
+  Rect tooltipBounds,
+  Offset nosePosition,
+  double opacity,
+);
+
+/// Predefined tooltip animation functions.
+abstract class TooltipAnimations {
+  /// Scale animation - tooltip scales from center point
+  static double scale(
+    Canvas canvas,
+    double animationValue,
+    Rect tooltipBounds,
+    Offset nosePosition,
+    double opacity,
+  ) {
+    canvas.translate(nosePosition.dx, nosePosition.dy);
+    canvas.scale(animationValue);
+    canvas.translate(-nosePosition.dx, -nosePosition.dy);
+    return opacity;
+  }
+
+  /// Slide from top animation
+  static double slideFromTop(
+    Canvas canvas,
+    double animationValue,
+    Rect tooltipBounds,
+    Offset nosePosition,
+    double opacity,
+  ) {
+    final double slideDistance = tooltipBounds.height;
+    canvas.translate(0, -slideDistance * (1 - animationValue));
+    return opacity;
+  }
+
+  /// Slide from bottom animation
+  static double slideFromBottom(
+    Canvas canvas,
+    double animationValue,
+    Rect tooltipBounds,
+    Offset nosePosition,
+    double opacity,
+  ) {
+    final double slideDistance = tooltipBounds.height;
+    canvas.translate(0, slideDistance * (1 - animationValue));
+    return opacity;
+  }
+}
+
 /// Holds details of a tooltip is shown.
 @immutable
 class TooltipInfo {
@@ -58,36 +119,13 @@ class TooltipInfo {
   }
 }
 
-class TooltipOpacity extends Opacity {
-  const TooltipOpacity({
-    super.key,
-    required super.opacity,
-    super.alwaysIncludeSemantics = false,
-    super.child,
-  });
-
-  @override
-  RenderOpacity createRenderObject(BuildContext context) {
-    return TooltipOpacityRenderBox(
-      opacity: opacity,
-      alwaysIncludeSemantics: alwaysIncludeSemantics,
-    );
-  }
-}
-
-class TooltipOpacityRenderBox extends RenderOpacity {
-  TooltipOpacityRenderBox({
-    super.opacity = 1.0,
-    super.alwaysIncludeSemantics = false,
-    super.child,
-  });
-}
-
 class CoreTooltip extends StatefulWidget {
   const CoreTooltip({
     super.key,
     required this.builder,
     this.animationDuration = 500,
+    this.animationCurve = Curves.easeOutBack,
+    this.animationFunction = TooltipAnimations.scale,
     this.showDuration = 3000,
     this.showDelay = 50,
     this.innerPadding = 5.0,
@@ -104,6 +142,8 @@ class CoreTooltip extends StatefulWidget {
 
   final TooltipWidgetBuilder? builder;
   final int animationDuration;
+  final Curve animationCurve;
+  final TooltipAnimationFunction animationFunction;
   final int showDuration;
   final int showDelay;
   final double innerPadding;
@@ -125,7 +165,7 @@ class CoreTooltipState extends State<CoreTooltip>
     with SingleTickerProviderStateMixin {
   final GlobalKey _tooltipKey = GlobalKey();
   late AnimationController _controller;
-  late CurvedAnimation _animation;
+  late Animation<double> _animation;
 
   bool _isDesktop = false;
   TooltipInfo? _info;
@@ -193,24 +233,15 @@ class CoreTooltipState extends State<CoreTooltip>
   void hide({bool immediately = false}) {
     _showDelayTimer?.cancel();
     immediately ? _controller.reset() : _controller.reverse();
-    // (_tooltipKey.currentContext?.findRenderObject()
-    //         as RenderConstrainedLayoutBuilder<BoxConstraints, RenderBox>?)
-    //     ?.markNeedsBuild();
   }
 
   void _startShowTimer() {
-    // if (_isDesktop && _pointerDeviceKind == PointerDeviceKind.mouse) {
-    // } else {
     _showTimer?.cancel();
     if (widget.showDuration.isInfinite || widget.shouldAlwaysShow) {
       return;
     }
 
     _showTimer = Timer(
-      // When the [animationDuration] is 3000 and the [showDuration] is 3000,
-      // the tooltip will start hiding after it completes the scale animation,
-      // without staying in the visual for 3 seconds.
-      // So, [widget.animationDuration] has been considered in [_showTimer].
       Duration(milliseconds: widget.animationDuration + widget.showDuration),
       () {
         if (mounted) {
@@ -219,7 +250,6 @@ class CoreTooltipState extends State<CoreTooltip>
         }
       },
     );
-    // }
   }
 
   @override
@@ -230,7 +260,7 @@ class CoreTooltipState extends State<CoreTooltip>
     );
     _animation = CurvedAnimation(
       parent: _controller,
-      curve: Curves.easeOutBack,
+      curve: widget.animationCurve,
     );
 
     super.initState();
@@ -241,7 +271,6 @@ class CoreTooltipState extends State<CoreTooltip>
     _info = null;
     _isDesktop = false;
     _controller.dispose();
-    _animation.dispose();
 
     _desktopShowDelayTimer?.cancel();
     _showTimer?.cancel();
@@ -256,7 +285,8 @@ class CoreTooltipState extends State<CoreTooltip>
         chartThemeData.platform == TargetPlatform.macOS ||
         chartThemeData.platform == TargetPlatform.windows ||
         chartThemeData.platform == TargetPlatform.linux;
-    return TooltipOpacity(
+
+    return Opacity(
       opacity: widget.opacity,
       child: CustomLayoutBuilder(
         key: _tooltipKey,
@@ -702,40 +732,56 @@ class _CoreTooltipRenderBox extends RenderProxyBox {
     final double animationValue = _state._animation.value;
     if (child == null ||
         _nosePosition == null ||
-        _effectivePreferTooltipOnTop == null) {
+        _effectivePreferTooltipOnTop == null ||
+        animationValue == 0.0) { // Skip painting if fully transparent
       return;
     }
 
     context.canvas.save();
-    context.canvas.translate(_nosePosition!.dx, _nosePosition!.dy);
-    context.canvas.scale(animationValue);
-    context.canvas.translate(-_nosePosition!.dx, -_nosePosition!.dy);
-    // In web HTML rendering, fill color clipped half of its tooltip's size.
-    // To avoid this issue we are drawing stroke before fill.
-    // Due to this, half of the stroke width only
-    // visible to us so that we are twice the stroke width.
-    // TODO(VijayakumarM): Check this comment.
-    if (elevation > 0) {
-      context.canvas.drawShadow(_path, shadowColor ?? color, elevation, true);
-    }
-    // Drawing stroke.
-    context.canvas.drawPath(_path, _strokePaint);
-    // Drawing fill color.
-    context.canvas.drawPath(_path, _fillPaint);
-    // Clipping corners and to ignore excess portions.
-    context.canvas.clipPath(_path);
-    // Drawing tooltip's builder/child.
+    
+    // Apply canvas transformations for animations
     final BoxParentData childParentData = child!.parentData! as BoxParentData;
-    // Used [pushTransform] because scrollable widgets are not scaled with
-    // [context.paintChild].
-    context.pushTransform(
-      true,
-      Offset(_nosePosition!.dx, _nosePosition!.dy),
-      Matrix4.diagonal3Values(animationValue, animationValue, 1),
-      (PaintingContext context, Offset translateOffset) {
-        context.paintChild(child!, childParentData.offset + offset);
-      },
+    final Rect tooltipBounds = Rect.fromLTWH(
+      childParentData.offset.dx,
+      childParentData.offset.dy,
+      child!.size.width,
+      child!.size.height,
     );
+    
+    // Get effective opacity from animation function
+    final double effectiveOpacity = _state.widget.animationFunction(
+      context.canvas,
+      animationValue,
+      tooltipBounds,
+      _nosePosition!,
+      _state.widget.opacity,
+    );
+    
+    // Apply opacity to colors for animation effects - cache base colors for performance
+    final Color baseShadowColor = shadowColor ?? color;
+    final Color shadowColorWithOpacity = baseShadowColor.withOpacity(
+      baseShadowColor.opacity * effectiveOpacity,
+    );
+    final Color fillColorWithOpacity = color.withOpacity(
+      color.opacity * effectiveOpacity,
+    );
+    final Color strokeColorWithOpacity = borderColor.withOpacity(
+      borderColor.opacity * effectiveOpacity,
+    );
+    
+    if (elevation > 0) {
+      context.canvas.drawShadow(_path, shadowColorWithOpacity, elevation, true);
+    }
+    
+    // Apply colors with opacity directly to paint objects
+    _strokePaint.color = strokeColorWithOpacity;
+    _fillPaint.color = fillColorWithOpacity;
+    
+    context.canvas.drawPath(_path, _strokePaint);
+    context.canvas.drawPath(_path, _fillPaint);
+    context.canvas.clipPath(_path);
+    
+    context.paintChild(child!, childParentData.offset + offset);
 
     context.canvas.restore();
   }

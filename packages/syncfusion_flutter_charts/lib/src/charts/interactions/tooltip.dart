@@ -22,6 +22,8 @@ class TooltipBehavior extends ChartBehavior {
     this.textStyle,
     this.activationMode = ActivationMode.singleTap,
     this.animationDuration = 350,
+    this.animationCurve = Curves.easeOutBack,
+    this.animationFunction = TooltipAnimations.scale,
     this.opacity = 1.0,
     this.borderColor = Colors.transparent,
     this.borderWidth = 1,
@@ -227,6 +229,54 @@ class TooltipBehavior extends ChartBehavior {
   /// }
   /// ```
   final int animationDuration;
+
+  /// Animation curve for the tooltip.
+  ///
+  /// Defaults to `Curves.easeOutBack`.
+  ///
+  /// ```dart
+  /// late TooltipBehavior tooltipBehavior;
+  ///
+  /// void initState() {
+  ///   tooltipBehavior = TooltipBehavior(
+  ///     enable: true,
+  ///     animationCurve: Curves.bounceOut
+  ///   );
+  ///   super.initState();
+  /// }
+  ///
+  /// Widget build(BuildContext context) {
+  ///   return SfCartesianChart(
+  ///     tooltipBehavior: tooltipBehavior
+  ///   );
+  /// }
+  /// ```
+  final Curve animationCurve;
+
+  /// The animation function to use when showing/hiding tooltips.
+  ///
+  /// You can use predefined animations from [TooltipAnimations] or create custom ones.
+  /// 
+  /// Defaults to `TooltipAnimations.scale`.
+  ///
+  /// ```dart
+  /// late TooltipBehavior tooltipBehavior;
+  ///
+  /// void initState() {
+  ///   tooltipBehavior = TooltipBehavior(
+  ///     enable: true,
+  ///     animationFunction: TooltipAnimations.slideFromTop
+  ///   );
+  ///   super.initState();
+  /// }
+  ///
+  /// Widget build(BuildContext context) {
+  ///   return SfCartesianChart(
+  ///     tooltipBehavior: tooltipBehavior
+  ///   );
+  /// }
+  /// ```
+  final TooltipAnimationFunction animationFunction;
 
   /// Toggles the visibility of the marker in the tooltip.
   ///
