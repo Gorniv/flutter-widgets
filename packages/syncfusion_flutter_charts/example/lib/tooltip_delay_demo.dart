@@ -26,11 +26,19 @@ class _TooltipDelayPageState extends State<TooltipDelayPage> {
   late TooltipBehavior _tooltipBehavior;
   int _delayValue = 500;
   int _animationDuration = 500;
+  int _showDuration = 3000; // Add show duration control
   Curve _animationCurve = Curves.easeOutBack;
   TooltipAnimationFunction _animationFunction = TooltipAnimations.scale;
 
   final List<int> _delayOptions = [0, 300, 500, 1000];
   final List<int> _durationOptions = [200, 350, 500, 800, 1200];
+  final List<int> _showDurationOptions = [
+    1000,
+    2000,
+    3000,
+    5000,
+    10000,
+  ]; // Add show duration options
 
   final List<Curve> _availableCurves = [
     Curves.easeOutBack,
@@ -71,6 +79,7 @@ class _TooltipDelayPageState extends State<TooltipDelayPage> {
     _tooltipBehavior = TooltipBehavior(
       enable: true,
       showDelay: _delayValue,
+      duration: _showDuration.toDouble(), // Add duration parameter
       animationDuration: _animationDuration,
       animationCurve: _animationCurve,
       animationFunction: _animationFunction,
@@ -104,6 +113,13 @@ class _TooltipDelayPageState extends State<TooltipDelayPage> {
     });
   }
 
+  void _updateShowDuration(int newDuration) {
+    setState(() {
+      _showDuration = newDuration;
+      _updateTooltipBehavior();
+    });
+  }
+
   void _updateAnimationCurve(Curve newCurve) {
     setState(() {
       _animationCurve = newCurve;
@@ -123,6 +139,7 @@ class _TooltipDelayPageState extends State<TooltipDelayPage> {
     _tooltipBehavior = TooltipBehavior(
       enable: true,
       showDelay: _delayValue,
+      duration: _showDuration.toDouble(), // Add duration parameter
       animationDuration: _animationDuration,
       animationCurve: _animationCurve,
       animationFunction: _animationFunction,
@@ -133,9 +150,7 @@ class _TooltipDelayPageState extends State<TooltipDelayPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Tooltip Delay & Animation Demo'),
-      ),
+      appBar: AppBar(title: Text('Tooltip Delay & Animation Demo')),
       body: Column(
         children: [
           // Control panel for delay and animation adjustment
@@ -151,17 +166,18 @@ class _TooltipDelayPageState extends State<TooltipDelayPage> {
                 // Delay buttons with highlighting
                 Wrap(
                   spacing: 8,
-                  children: _delayOptions.map((delay) {
-                    final bool isSelected = _delayValue == delay;
-                    return ElevatedButton(
-                      onPressed: () => _updateDelay(delay),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: isSelected ? Colors.blue : null,
-                        foregroundColor: isSelected ? Colors.white : null,
-                      ),
-                      child: Text(delay == 0 ? 'No Delay' : '${delay}ms'),
-                    );
-                  }).toList(),
+                  children:
+                      _delayOptions.map((delay) {
+                        final bool isSelected = _delayValue == delay;
+                        return ElevatedButton(
+                          onPressed: () => _updateDelay(delay),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isSelected ? Colors.blue : null,
+                            foregroundColor: isSelected ? Colors.white : null,
+                          ),
+                          child: Text(delay == 0 ? 'No Delay' : '${delay}ms'),
+                        );
+                      }).toList(),
                 ),
                 SizedBox(height: 20),
                 // Animation duration selector
@@ -172,17 +188,44 @@ class _TooltipDelayPageState extends State<TooltipDelayPage> {
                 SizedBox(height: 10),
                 Wrap(
                   spacing: 8,
-                  children: _durationOptions.map((duration) {
-                    final bool isSelected = _animationDuration == duration;
-                    return ElevatedButton(
-                      onPressed: () => _updateAnimationDuration(duration),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: isSelected ? Colors.green : null,
-                        foregroundColor: isSelected ? Colors.white : null,
-                      ),
-                      child: Text('${duration}ms'),
-                    );
-                  }).toList(),
+                  children:
+                      _durationOptions.map((duration) {
+                        final bool isSelected = _animationDuration == duration;
+                        return ElevatedButton(
+                          onPressed: () => _updateAnimationDuration(duration),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isSelected ? Colors.green : null,
+                            foregroundColor: isSelected ? Colors.white : null,
+                          ),
+                          child: Text('${duration}ms'),
+                        );
+                      }).toList(),
+                ),
+                SizedBox(height: 20),
+                // Show duration selector
+                Text(
+                  'Tooltip Show Duration: ${_showDuration}ms',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  children:
+                      _showDurationOptions.map((duration) {
+                        final bool isSelected = _showDuration == duration;
+                        return ElevatedButton(
+                          onPressed: () => _updateShowDuration(duration),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isSelected ? Colors.orange : null,
+                            foregroundColor: isSelected ? Colors.white : null,
+                          ),
+                          child: Text(
+                            duration >= 1000
+                                ? '${(duration / 1000).toStringAsFixed(1)}s'
+                                : '${duration}ms',
+                          ),
+                        );
+                      }).toList(),
                 ),
                 SizedBox(height: 20),
                 // Animation curve selector
@@ -194,12 +237,13 @@ class _TooltipDelayPageState extends State<TooltipDelayPage> {
                 DropdownButton<Curve>(
                   value: _animationCurve,
                   isExpanded: true,
-                  items: _availableCurves.map((Curve curve) {
-                    return DropdownMenuItem<Curve>(
-                      value: curve,
-                      child: Text(_curveNames[curve]!),
-                    );
-                  }).toList(),
+                  items:
+                      _availableCurves.map((Curve curve) {
+                        return DropdownMenuItem<Curve>(
+                          value: curve,
+                          child: Text(_curveNames[curve]!),
+                        );
+                      }).toList(),
                   onChanged: (Curve? newCurve) {
                     if (newCurve != null) {
                       _updateAnimationCurve(newCurve);
@@ -216,12 +260,15 @@ class _TooltipDelayPageState extends State<TooltipDelayPage> {
                 DropdownButton<TooltipAnimationFunction>(
                   value: _animationFunction,
                   isExpanded: true,
-                  items: _availableAnimations.map((TooltipAnimationFunction animation) {
-                    return DropdownMenuItem<TooltipAnimationFunction>(
-                      value: animation,
-                      child: Text(_animationNames[animation]!),
-                    );
-                  }).toList(),
+                  items:
+                      _availableAnimations.map((
+                        TooltipAnimationFunction animation,
+                      ) {
+                        return DropdownMenuItem<TooltipAnimationFunction>(
+                          value: animation,
+                          child: Text(_animationNames[animation]!),
+                        );
+                      }).toList(),
                   onChanged: (TooltipAnimationFunction? newAnimation) {
                     if (newAnimation != null) {
                       _updateAnimationFunction(newAnimation);
@@ -230,7 +277,7 @@ class _TooltipDelayPageState extends State<TooltipDelayPage> {
                 ),
                 SizedBox(height: 10),
                 Text(
-                  'Try different animations: Scale (default) or Slide animations',
+                  'Controls: Show Delay (before tooltip appears), Show Duration (how long tooltip stays), Animation Duration (fade in/out speed)',
                   style: TextStyle(color: Colors.grey[600], fontSize: 12),
                   textAlign: TextAlign.center,
                 ),
@@ -241,10 +288,12 @@ class _TooltipDelayPageState extends State<TooltipDelayPage> {
           Expanded(
             child: SfCartesianChart(
               primaryXAxis: CategoryAxis(),
-              title: ChartTitle(text: 'Sales Data with Tooltip Delay & Animation'),
+              title: ChartTitle(
+                text: 'Sales Data with Tooltip Delay & Animation',
+              ),
               tooltipBehavior: _tooltipBehavior,
               series: <CartesianSeries<ChartData, String>>[
-                LineSeries<ChartData, String>(
+                ColumnSeries<ChartData, String>(
                   dataSource: chartData,
                   xValueMapper: (ChartData data, _) => data.x,
                   yValueMapper: (ChartData data, _) => data.y,

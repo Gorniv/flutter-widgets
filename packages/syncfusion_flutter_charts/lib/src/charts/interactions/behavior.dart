@@ -423,6 +423,10 @@ class RenderBehaviorArea extends RenderBox
   void handlePointerExit(PointerExitEvent details) {
     crosshairBehavior?.handlePointerExit(details);
     trackballBehavior?.handlePointerExit(details);
+    // Cancel pending tooltip show operations when mouse exits chart area
+    if (tooltipBehavior != null && tooltipBehavior!.enable) {
+      cancelTooltip();
+    }
   }
 
   void handleLongPressStart(LongPressStartDetails details) {
@@ -576,6 +580,11 @@ class RenderBehaviorArea extends RenderBox
     (_tooltipKey?.currentState as CoreTooltipState?)?.hide(
       immediately: immediately,
     );
+  }
+
+  /// Cancel pending tooltip show operations
+  void cancelTooltip() {
+    (_tooltipKey?.currentState as CoreTooltipState?)?.cancelShow();
   }
 
   void hideInteractiveTooltip() {

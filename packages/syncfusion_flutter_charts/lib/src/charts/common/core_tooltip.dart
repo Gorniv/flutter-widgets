@@ -9,26 +9,27 @@ import 'package:flutter/scheduler.dart'; // добавлено
 
 import 'element_widget.dart';
 
-typedef TooltipWidgetBuilder = Widget? Function(
-    BuildContext, TooltipInfo?, Size);
+typedef TooltipWidgetBuilder =
+    Widget? Function(BuildContext, TooltipInfo?, Size);
 
 /// Function type for custom tooltip animations.
-/// 
+///
 /// Parameters:
 /// - [canvas]: Canvas for drawing operations
 /// - [animationValue]: Current animation value (0.0 to 1.0)
 /// - [tooltipBounds]: Bounds of the tooltip
 /// - [nosePosition]: Position of the tooltip nose/arrow
 /// - [opacity]: Base opacity value
-/// 
+///
 /// Returns effective opacity for the tooltip.
-typedef TooltipAnimationFunction = double Function(
-  Canvas canvas,
-  double animationValue,
-  Rect tooltipBounds,
-  Offset nosePosition,
-  double opacity,
-);
+typedef TooltipAnimationFunction =
+    double Function(
+      Canvas canvas,
+      double animationValue,
+      Rect tooltipBounds,
+      Offset nosePosition,
+      double opacity,
+    );
 
 /// Predefined tooltip animation functions.
 abstract class TooltipAnimations {
@@ -224,11 +225,13 @@ class CoreTooltipState extends State<CoreTooltip>
       } else {
         // Use user-defined showDelay for desktop, with minimum 50ms to prevent excessive hover events
         final int effectiveDelay = widget.showDelay > 0 ? widget.showDelay : 50;
-        _desktopShowDelayTimer =
-            Timer(Duration(milliseconds: effectiveDelay), () {
-          _show(info, kind);
-          _desktopShowDelayTimer = null;
-        });
+        _desktopShowDelayTimer = Timer(
+          Duration(milliseconds: effectiveDelay),
+          () {
+            _show(info, kind);
+            _desktopShowDelayTimer = null;
+          },
+        );
       }
     } else {
       // Apply user-defined show delay for touch interactions
@@ -269,6 +272,14 @@ class CoreTooltipState extends State<CoreTooltip>
     _showDelayTimer?.cancel();
     immediately ? _controller.reset() : _controller.reverse();
     _markOverlayNeedsBuild();
+  }
+
+  /// Cancel pending show operations and timers
+  void cancelShow() {
+    _desktopShowDelayTimer?.cancel();
+    _showDelayTimer?.cancel();
+    _desktopShowDelayTimer = null;
+    _showDelayTimer = null;
   }
 
   void _startShowTimer() {
@@ -320,7 +331,8 @@ class CoreTooltipState extends State<CoreTooltip>
   // ---------- построение основного виджета ----------
   Widget _buildOverlayContent(BuildContext context) {
     final ThemeData chartThemeData = Theme.of(context);
-    _isDesktop = kIsWeb ||
+    _isDesktop =
+        kIsWeb ||
         chartThemeData.platform == TargetPlatform.macOS ||
         chartThemeData.platform == TargetPlatform.windows ||
         chartThemeData.platform == TargetPlatform.linux;
@@ -348,8 +360,7 @@ class CoreTooltipState extends State<CoreTooltip>
               isDesktop: _isDesktop,
               deviceKind: _pointerDeviceKind,
               state: this,
-              child:
-                  widget.builder?.call(context, _info, constraints.biggest),
+              child: widget.builder?.call(context, _info, constraints.biggest),
             );
           },
         ),
@@ -451,9 +462,10 @@ class _CoreTooltipRenderBox extends RenderProxyBox {
   final _RectangularShape _tooltipShape = const _RectangularShape();
 
   final Paint _fillPaint = Paint()..isAntiAlias = true;
-  final Paint _strokePaint = Paint()
-    ..isAntiAlias = true
-    ..style = PaintingStyle.stroke;
+  final Paint _strokePaint =
+      Paint()
+        ..isAntiAlias = true
+        ..style = PaintingStyle.stroke;
 
   Offset? _localPrimaryPosition;
   Offset? _localSecondaryPosition;
@@ -672,13 +684,16 @@ class _CoreTooltipRenderBox extends RenderProxyBox {
 
     final Rect surfaceBounds = _localEdgeBounds ?? paintBounds;
     child?.layout(
-      BoxConstraints.loose(constraints.biggest), // allow child to size to its content
+      BoxConstraints.loose(
+        constraints.biggest,
+      ), // allow child to size to its content
       parentUsesSize: true,
     );
     _effectivePreferTooltipOnTop ??= _canPreferTooltipOnTop(surfaceBounds);
-    _nosePosition = _effectivePreferTooltipOnTop!
-        ? _localPrimaryPosition?.translate(0.0, -_noseGap)
-        : _localSecondaryPosition?.translate(0.0, _noseGap);
+    _nosePosition =
+        _effectivePreferTooltipOnTop!
+            ? _localPrimaryPosition?.translate(0.0, -_noseGap)
+            : _localSecondaryPosition?.translate(0.0, _noseGap);
     _validateNosePosition();
 
     _path = _tooltipShape.outerPath(
@@ -787,12 +802,13 @@ class _CoreTooltipRenderBox extends RenderProxyBox {
     if (child == null ||
         _nosePosition == null ||
         _effectivePreferTooltipOnTop == null ||
-        animationValue == 0.0) { // Skip painting if fully transparent
+        animationValue == 0.0) {
+      // Skip painting if fully transparent
       return;
     }
 
     context.canvas.save();
-    
+
     // Apply canvas transformations for animations
     final BoxParentData childParentData = child!.parentData! as BoxParentData;
     final Rect tooltipBounds = Rect.fromLTWH(
@@ -801,7 +817,7 @@ class _CoreTooltipRenderBox extends RenderProxyBox {
       child!.size.width,
       child!.size.height,
     );
-    
+
     // Get effective opacity from animation function
     final double effectiveOpacity = _state.widget.animationFunction(
       context.canvas,
@@ -810,7 +826,7 @@ class _CoreTooltipRenderBox extends RenderProxyBox {
       _nosePosition!,
       _state.widget.opacity,
     );
-    
+
     // Apply opacity to colors for animation effects - cache base colors for performance
     final Color baseShadowColor = shadowColor ?? color;
     final Color shadowColorWithOpacity = baseShadowColor.withOpacity(
@@ -822,19 +838,19 @@ class _CoreTooltipRenderBox extends RenderProxyBox {
     final Color strokeColorWithOpacity = borderColor.withOpacity(
       borderColor.opacity * effectiveOpacity,
     );
-    
+
     if (elevation > 0) {
       context.canvas.drawShadow(_path, shadowColorWithOpacity, elevation, true);
     }
-    
+
     // Apply colors with opacity directly to paint objects
     _strokePaint.color = strokeColorWithOpacity;
     _fillPaint.color = fillColorWithOpacity;
-    
+
     context.canvas.drawPath(_path, _strokePaint);
     context.canvas.drawPath(_path, _fillPaint);
     context.canvas.clipPath(_path);
-    
+
     context.paintChild(child!, childParentData.offset + offset);
 
     context.canvas.restore();
@@ -872,30 +888,36 @@ class _RectangularShape {
     double tooltipTriangleOffsetY = tooltipStartPoint - triangleHeight;
 
     final double endGlobal = surfaceBounds.right - innerPadding;
-    double rightLineWidth = position.dx + halfTooltipWidth > endGlobal
-        ? endGlobal - position.dx
-        : halfTooltipWidth;
+    double rightLineWidth =
+        position.dx + halfTooltipWidth > endGlobal
+            ? endGlobal - position.dx
+            : halfTooltipWidth;
     final double leftLineWidth =
         position.dx - halfTooltipWidth < surfaceBounds.left + innerPadding
             ? position.dx - surfaceBounds.left - innerPadding
             : tooltipWidth - rightLineWidth;
-    rightLineWidth = leftLineWidth < halfTooltipWidth
-        ? halfTooltipWidth - leftLineWidth + rightLineWidth
-        : rightLineWidth;
+    rightLineWidth =
+        leftLineWidth < halfTooltipWidth
+            ? halfTooltipWidth - leftLineWidth + rightLineWidth
+            : rightLineWidth;
 
-    double moveNosePoint = leftLineWidth < tooltipWidth * 0.1
-        ? tooltipWidth * 0.1 - leftLineWidth
-        : 0.0;
-    moveNosePoint = rightLineWidth < tooltipWidth * 0.1
-        ? -(tooltipWidth * 0.1 - rightLineWidth)
-        : moveNosePoint;
+    double moveNosePoint =
+        leftLineWidth < tooltipWidth * 0.1
+            ? tooltipWidth * 0.1 - leftLineWidth
+            : 0.0;
+    moveNosePoint =
+        rightLineWidth < tooltipWidth * 0.1
+            ? -(tooltipWidth * 0.1 - rightLineWidth)
+            : moveNosePoint;
 
-    double shiftText = leftLineWidth > rightLineWidth
-        ? -(halfTooltipWidth - rightLineWidth)
-        : 0.0;
-    shiftText = leftLineWidth < rightLineWidth
-        ? (halfTooltipWidth - leftLineWidth)
-        : shiftText;
+    double shiftText =
+        leftLineWidth > rightLineWidth
+            ? -(halfTooltipWidth - rightLineWidth)
+            : 0.0;
+    shiftText =
+        leftLineWidth < rightLineWidth
+            ? (halfTooltipWidth - leftLineWidth)
+            : shiftText;
 
     rightLineWidth = rightLineWidth + elevation;
     if (!preferTooltipOnTop) {
