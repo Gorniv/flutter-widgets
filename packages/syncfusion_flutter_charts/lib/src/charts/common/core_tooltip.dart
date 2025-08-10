@@ -184,12 +184,20 @@ class CoreTooltipState extends State<CoreTooltip>
   bool _isOverlayInserted = false;
 
   void _insertOverlay() {
-    if (_isOverlayInserted) return;
-    _overlayEntry = OverlayEntry(
-      builder: (context) => _buildOverlayContent(context),
-    );
-    Overlay.of(context, rootOverlay: true).insert(_overlayEntry!);
-    _isOverlayInserted = true;
+    if (_isOverlayInserted || !mounted) {
+      return;
+    }
+
+    try {
+      _overlayEntry = OverlayEntry(
+        builder: (context) => _buildOverlayContent(context),
+      );
+      Overlay.of(context, rootOverlay: true).insert(_overlayEntry!);
+      _isOverlayInserted = true;
+    } catch (e) {
+      // Handle case when overlay is not available (widget not mounted in tree)
+      _overlayEntry = null;
+    }
   }
 
   void _removeOverlay() {
@@ -199,16 +207,21 @@ class CoreTooltipState extends State<CoreTooltip>
   }
 
   void _markOverlayNeedsBuild() {
-    if (_overlayEntry == null) return;
+    final overlayEntry = _overlayEntry;
+    if (overlayEntry == null) {
+      return;
+    }
 
     final SchedulerPhase phase = SchedulerBinding.instance.schedulerPhase;
     // Если находимся в фазах, когда перестраивать нельзя, откладываем на пост-фрейм.
     if (phase == SchedulerPhase.idle ||
         phase == SchedulerPhase.postFrameCallbacks) {
-      _overlayEntry!.markNeedsBuild();
+      overlayEntry.markNeedsBuild();
     } else {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _overlayEntry?.markNeedsBuild();
+        if (mounted) {
+          _overlayEntry?.markNeedsBuild();
+        }
       });
     }
   }
@@ -228,7 +241,9 @@ class CoreTooltipState extends State<CoreTooltip>
         _desktopShowDelayTimer = Timer(
           Duration(milliseconds: effectiveDelay),
           () {
-            _show(info, kind);
+            if (mounted) {
+              _show(info, kind);
+            }
             _desktopShowDelayTimer = null;
           },
         );
@@ -238,7 +253,9 @@ class CoreTooltipState extends State<CoreTooltip>
       if (widget.showDelay > 0 && !immediately) {
         _showDelayTimer?.cancel();
         _showDelayTimer = Timer(Duration(milliseconds: widget.showDelay), () {
-          _show(info, kind);
+          if (mounted) {
+            _show(info, kind);
+          }
           _showDelayTimer = null;
         });
       } else {
@@ -310,7 +327,11 @@ class CoreTooltipState extends State<CoreTooltip>
       curve: widget.animationCurve,
     );
 
-    WidgetsBinding.instance.addPostFrameCallback((_) => _insertOverlay());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _insertOverlay();
+      }
+    });
 
     super.initState();
   }
