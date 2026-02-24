@@ -8441,7 +8441,7 @@ class MapArc extends DiagnosticableTree {
 // To calculate dash array path for series
 Path? _dashPath(
   Path? source, {
-  required _IntervalList<double> dashArray,
+  required _IntervalList dashArray,
   double capRadius = 0,
 }) {
   if (source == null) {
@@ -8500,7 +8500,7 @@ void _drawDashedLine(
     canvas.drawPath(
       _dashPath(
         path,
-        dashArray: _IntervalList<double>(dashArray),
+        dashArray: _IntervalList(dashArray),
         capRadius: capRadius,
       )!,
       paint,
@@ -8511,7 +8511,7 @@ void _drawDashedLine(
 }
 
 // A circular array for dash offsets and lengths.
-class _IntervalList<double> {
+class _IntervalList {
   _IntervalList(this.dashArray);
 
   final List<double> dashArray;

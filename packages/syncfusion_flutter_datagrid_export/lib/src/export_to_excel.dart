@@ -274,9 +274,10 @@ class DataGridToExcelConverter {
       return;
     }
 
-    final List<GridTableSummaryRow> summaryRows = dataGrid.tableSummaryRows
-        .where((GridTableSummaryRow row) => row.position == position)
-        .toList();
+    final List<GridTableSummaryRow> summaryRows =
+        dataGrid.tableSummaryRows
+            .where((GridTableSummaryRow row) => row.position == position)
+            .toList();
 
     if (summaryRows.isEmpty) {
       return;
@@ -362,9 +363,10 @@ class DataGridToExcelConverter {
   /// Gets the cell value required for data rows.
   @protected
   Object? getCellValue(DataGridRow row, GridColumn column) {
-    final DataGridCell cellValue = row.getCells().firstWhereOrNull(
-      (DataGridCell cell) => cell.columnName == column.columnName,
-    )!;
+    final DataGridCell cellValue =
+        row.getCells().firstWhereOrNull(
+          (DataGridCell cell) => cell.columnName == column.columnName,
+        )!;
     return cellValue.value;
   }
 
@@ -374,11 +376,13 @@ class DataGridToExcelConverter {
     List<DataGridRow>? rows,
     Worksheet worksheet,
   ) {
-    _columns = dataGrid.columns
-        .where(
-          (GridColumn column) => !excludeColumns.contains(column.columnName),
-        )
-        .toList();
+    _columns =
+        dataGrid.columns
+            .where(
+              (GridColumn column) =>
+                  !excludeColumns.contains(column.columnName),
+            )
+            .toList();
 
     // Return if all the columns are `excludeColumns`.
     if (columns.isEmpty) {
@@ -573,16 +577,14 @@ class DataGridToExcelConverter {
       switch (cellType) {
         case DataGridExportCellType.columnHeader:
         case DataGridExportCellType.stackedHeader:
-          final double height = dataGrid.headerRowHeight.isNaN
-              ? 56.0
-              : dataGrid.headerRowHeight;
+          final double height =
+              dataGrid.headerRowHeight.isNaN ? 56.0 : dataGrid.headerRowHeight;
           sheet.setRowHeightInPixels(excelRowIndex, height);
           break;
         case DataGridExportCellType.row:
         case DataGridExportCellType.tableSummaryRow:
-          final double height = dataGrid.rowHeight.isNaN
-              ? 49.0
-              : dataGrid.rowHeight;
+          final double height =
+              dataGrid.rowHeight.isNaN ? 49.0 : dataGrid.rowHeight;
           sheet.setRowHeightInPixels(excelRowIndex, height);
           break;
       }

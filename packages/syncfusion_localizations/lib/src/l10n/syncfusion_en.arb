@@ -221,25 +221,25 @@
       "type": "text"
   },
 
-  "rabi1Label": "Rabi' al-awwal",
+  "rabi1Label": "Rabi' I",
   "@rabi1Label": {
       "description": "The header string for the third month of hirji calendar.",
       "type": "text"
   },
 
-  "rabi2Label": "Rabi' al-thani",
+  "rabi2Label": "Rabi' II",
   "@rabi2Label": {
       "description": "The header string for the fourth month of hirji calendar.",
       "type": "text"
   },
 
-  "jumada1Label": "Jumada al-awwal",
+  "jumada1Label": "Jumada I",
   "@jumada1Label": {
       "description": "The header string for the fifth month of hirji calendar.",
       "type": "text"
   },
 
-  "jumada2Label": "Jumada al-thani",
+  "jumada2Label": "Jumada II",
   "@jumada2Label": {
       "description": "The header string for the sixth month of hirji calendar.",
       "type": "text"
@@ -251,7 +251,7 @@
       "type": "text"
   },
 
-  "shaabanLabel": "Sha'aban",
+  "shaabanLabel": "Sha'ban",
   "@shaabanLabel": {
       "description": "The header string for the eight month of hirji calendar.",
       "type": "text"
@@ -269,13 +269,13 @@
       "type": "text"
   },
 
-  "dhualqiLabel": "Dhu al-Qi'dah",
+  "dhualqiLabel": "Dhu'l-Qi'dah",
   "@dhualqiLabel": {
       "description": "The header string for the eleventh month of hirji calendar.",
       "type": "text"
   },
 
-  "dhualhiLabel": "Dhu al-Hijjah",
+  "dhualhiLabel": "Dhu'l-Hijjah",
   "@dhualhiLabel": {
       "description": "The header string for the twelfth month of hirji calendar.",
       "type": "text"
@@ -293,13 +293,13 @@
       "type": "text"
   },
 
-  "shortRabi1Label": "Rabi. I",
+  "shortRabi1Label": "Rab. I",
   "@shortRabi1Label": {
       "description": "The header string for the third month of hirji calendar.",
       "type": "text"
   },
 
-  "shortRabi2Label": "Rabi. II",
+  "shortRabi2Label": "Rab. II",
   "@shortRabi2Label": {
       "description": "The header string for the fourth month of hirji calendar.",
       "type": "text"
@@ -341,13 +341,13 @@
       "type": "text"
   },
 
-  "shortDhualqiLabel": "Dhu'l-Q",
+  "shortDhualqiLabel": "Dhu'l-Q.",
   "@shortDhualqiLabel": {
       "description": "The header string for the eleventh month of hirji calendar.",
       "type": "text"
   },
 
-  "shortDhualhiLabel": "Dhu'l-H",
+  "shortDhualhiLabel": "Dhu'l-H.",
   "@shortDhualhiLabel": {
       "description": "The header string for the twelfth month of hirji calendar.",
       "type": "text"
@@ -637,6 +637,12 @@
   "selectAllDataGridFilteringLabel": "Select All",
   "@selectAllDataGridFilteringLabel": {
       "description" : "The label that is displayed in the filter view in SfDataGrid for `Select All` option in drop down widget.",
+      "type" : "text"
+  },
+
+  "selectADateDataGridFilteringLabel": "Select a date",
+  "@selectADateDataGridFilteringLabel": {
+      "description" : "The label that is displayed in the header view of the calendar in SfDataGrid for `Select a date` option in the popup menu.",
       "type" : "text"
   },
   

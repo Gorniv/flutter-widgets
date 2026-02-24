@@ -466,11 +466,13 @@ class DataGridToPdfConverter {
     );
 
     //final List<GridColumn> columns = dataGrid.columns;
-    _columns = dataGrid.columns
-        .where(
-          (GridColumn column) => !excludeColumns.contains(column.columnName),
-        )
-        .toList();
+    _columns =
+        dataGrid.columns
+            .where(
+              (GridColumn column) =>
+                  !excludeColumns.contains(column.columnName),
+            )
+            .toList();
 
     //if fit all columns in one page is false then horizontal overflow is true and type is next page
     if (!fitAllColumnsInOnePage) {
@@ -638,9 +640,10 @@ class DataGridToPdfConverter {
   /// Gets the cell value required for data rows.
   @protected
   Object? getCellValue(GridColumn column, DataGridRow row) {
-    final DataGridCell cellValue = row.getCells().firstWhereOrNull(
-      (DataGridCell element) => element.columnName == column.columnName,
-    )!;
+    final DataGridCell cellValue =
+        row.getCells().firstWhereOrNull(
+          (DataGridCell element) => element.columnName == column.columnName,
+        )!;
     return cellValue.value;
   }
 
@@ -683,9 +686,10 @@ class DataGridToPdfConverter {
       return;
     }
 
-    final List<GridTableSummaryRow> summaryRows = dataGrid.tableSummaryRows
-        .where((GridTableSummaryRow row) => row.position == position)
-        .toList();
+    final List<GridTableSummaryRow> summaryRows =
+        dataGrid.tableSummaryRows
+            .where((GridTableSummaryRow row) => row.position == position)
+            .toList();
 
     if (summaryRows.isEmpty) {
       return;

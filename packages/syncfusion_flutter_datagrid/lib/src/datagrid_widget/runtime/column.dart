@@ -1527,6 +1527,12 @@ class ColumnResizeController {
   /// [SystemMouseCursors.resizeColumn] or not.
   bool canSwitchResizeColumnCursor = false;
 
+  /// Notifies listeners when [canSwitchResizeColumnCursor] and [isResizeIndicatorVisible] changes.
+  /// This is used to trigger rebuilds in UI elements (like feedback widgets)
+  final ValueNotifier<bool> canSwitchResizeColumnCursorNotifier = ValueNotifier(
+    true,
+  );
+
   /// Determines whether the resizing indicator is enable or not.
   bool isResizeIndicatorVisible = false;
 
@@ -2141,6 +2147,10 @@ class ColumnResizeController {
 
         if (resizingLine != null && isResizeIndicatorVisible) {
           _isLongPressEnabled = true;
+          if (dataGridConfiguration.columnDragAndDropController
+              .canAllowColumnDragAndDrop()) {
+            canSwitchResizeColumnCursorNotifier.value = true;
+          }
           // Rebuild to enable the resizing indicator.
           _rebuild();
         }
@@ -2165,10 +2175,8 @@ class ColumnResizeController {
     if (canSwitchResizeColumnCursor &&
         dataGridConfiguration.columnDragAndDropController
             .canAllowColumnDragAndDrop()) {
-      notifyDataGridPropertyChangeListeners(
-        dataGridConfiguration.source,
-        propertyName: 'columnDragAndDrop',
-      );
+      // Notify the feedback widget to initiate a rebuild.
+      canSwitchResizeColumnCursorNotifier.value = canSwitchResizeColumnCursor;
     }
   }
 
@@ -3839,6 +3847,12 @@ class ColumnDragAndDropController {
   void onPointerUp(PointerUpEvent event) {
     final DataGridConfiguration dataGridConfiguration = dataGridStateDetails();
     disableScrolling = true;
+
+    // Returns early as drag-and-drop was not in progress when the pointer was released.
+    if (!allowColumnDrag && dragColumnStartIndex == null) {
+      return;
+    }
+
     if (allowColumnDrag &&
         scrollOrigin != null &&
         event.position.dy >= scrollOrigin!.dy) {

@@ -374,9 +374,11 @@ class SinglePageViewState extends State<SinglePageView> {
       final Offset previousOffset = _currentPageTransformationController
           .toScene(Offset.zero);
       _currentPageTransformationController.value =
-          _currentPageTransformationController.value.clone()..translate(
+          _currentPageTransformationController.value.clone()..translateByDouble(
             previousOffset.dx - offset.dx,
             previousOffset.dy - offset.dy,
+            0.0,
+            1.0,
           );
     }
     widget.onPdfOffsetChanged!.call(
@@ -648,9 +650,11 @@ class SinglePageViewState extends State<SinglePageView> {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   _currentPageTransformationController.value =
                       _currentPageTransformationController.value.clone()
-                        ..translate(
+                        ..translateByDouble(
                           previousOffset.dx - xPosition,
                           previousOffset.dy - yPosition,
+                          0.0,
+                          1.0,
                         );
                 });
               }
@@ -959,8 +963,12 @@ class SinglePageViewState extends State<SinglePageView> {
       final Offset previousOffset = _currentPageTransformationController
           .toScene(Offset.zero);
       _currentPageTransformationController.value =
-          _currentPageTransformationController.value.clone()
-            ..scale(zoomChangeFactor, zoomChangeFactor);
+          _currentPageTransformationController.value.clone()..scaleByDouble(
+            zoomChangeFactor,
+            zoomChangeFactor,
+            zoomChangeFactor,
+            1.0,
+          );
       final Offset currentOffset = _currentPageTransformationController.toScene(
         Offset.zero,
       );
@@ -972,10 +980,13 @@ class SinglePageViewState extends State<SinglePageView> {
                   zoomLevel <
               widget.viewportDimension.width)) {
         _currentPageTransformationController.value =
-            _currentPageTransformationController.value.clone()..translate(
-              currentOffset.dx,
-              currentOffset.dy / widget.pdfViewerController.zoomLevel,
-            );
+            _currentPageTransformationController.value.clone()
+              ..translateByDouble(
+                currentOffset.dx,
+                currentOffset.dy / widget.pdfViewerController.zoomLevel,
+                0.0,
+                1.0,
+              );
       } else {
         greyAreaSize =
             widget.viewportDimension.height -
@@ -1050,10 +1061,13 @@ class SinglePageViewState extends State<SinglePageView> {
           final Offset previousOffset = _currentPageTransformationController
               .toScene(Offset.zero);
           _currentPageTransformationController.value =
-              _currentPageTransformationController.value.clone()..translate(
-                previousOffset.dx - offset.dx.clamp(0, widthFactor.abs()),
-                -(widget.viewportDimension.height - pdfDimension.height) / 2,
-              );
+              _currentPageTransformationController.value.clone()
+                ..translateByDouble(
+                  previousOffset.dx - offset.dx.clamp(0, widthFactor.abs()),
+                  -(widget.viewportDimension.height - pdfDimension.height) / 2,
+                  0.0,
+                  1.0,
+                );
         } else {
           if (!kIsDesktop || (kIsDesktop && widget.isMobileWebView)) {
             isJumpOnZoomedDocument = true;
@@ -1088,9 +1102,11 @@ class SinglePageViewState extends State<SinglePageView> {
       Offset.zero,
     );
     _currentPageTransformationController.value =
-        _currentPageTransformationController.value.clone()..translate(
+        _currentPageTransformationController.value.clone()..translateByDouble(
           previousOffset.dx - offset.dx,
           previousOffset.dy - offset.dy,
+          0.0,
+          1.0,
         );
     widget.onPdfOffsetChanged!.call(
       _currentPageTransformationController.toScene(Offset.zero),
@@ -1185,7 +1201,7 @@ class SinglePageViewState extends State<SinglePageView> {
                       ),
                     ),
                   ),
-                _paginationTextField(),
+                _paginationTextField(context),
               ],
             ),
           ),
@@ -1222,7 +1238,7 @@ class SinglePageViewState extends State<SinglePageView> {
             ),
             TextButton(
               onPressed: () {
-                _handlePageNumberValidation();
+                _handlePageNumberValidation(context);
               },
               style:
                   isMaterial3
@@ -1254,7 +1270,7 @@ class SinglePageViewState extends State<SinglePageView> {
   }
 
   /// A material design Text field for pagination dialog box.
-  Widget _paginationTextField() {
+  Widget _paginationTextField(BuildContext context) {
     final bool isMaterial3 = Theme.of(context).useMaterial3;
     return Form(
       key: _formKey,
@@ -1373,9 +1389,11 @@ class SinglePageViewState extends State<SinglePageView> {
           enableInteractiveSelection: false,
           controller: _textFieldController,
           autofocus: true,
-          onEditingComplete: _handlePageNumberValidation,
+          onEditingComplete: () {
+            _handlePageNumberValidation(context);
+          },
           onFieldSubmitted: (String value) {
-            _handlePageNumberValidation();
+            _handlePageNumberValidation(context);
           },
           validator: (String? value) {
             try {
@@ -1399,7 +1417,7 @@ class SinglePageViewState extends State<SinglePageView> {
   }
 
   /// Validates the page number entered in text field.
-  void _handlePageNumberValidation() {
+  void _handlePageNumberValidation(BuildContext context) {
     if (_formKey.currentState != null && _formKey.currentState!.validate()) {
       final int index = int.parse(_textFieldController.text);
       _textFieldController.clear();

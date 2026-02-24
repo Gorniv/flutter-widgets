@@ -4,8 +4,9 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/widgets.dart'; // уже есть, но нужно для OverlayEntry
 import 'package:flutter/scheduler.dart'; // добавлено
+// ignore: unnecessary_import
+import 'package:flutter/widgets.dart'; // уже есть, но нужно для OverlayEntry
 
 import 'element_widget.dart';
 
@@ -850,14 +851,14 @@ class _CoreTooltipRenderBox extends RenderProxyBox {
 
     // Apply opacity to colors for animation effects - cache base colors for performance
     final Color baseShadowColor = shadowColor ?? color;
-    final Color shadowColorWithOpacity = baseShadowColor.withOpacity(
-      baseShadowColor.opacity * effectiveOpacity,
+    final Color shadowColorWithOpacity = baseShadowColor.withValues(
+      alpha: baseShadowColor.a * effectiveOpacity,
     );
-    final Color fillColorWithOpacity = color.withOpacity(
-      color.opacity * effectiveOpacity,
+    final Color fillColorWithOpacity = color.withValues(
+      alpha: color.a * effectiveOpacity,
     );
-    final Color strokeColorWithOpacity = borderColor.withOpacity(
-      borderColor.opacity * effectiveOpacity,
+    final Color strokeColorWithOpacity = borderColor.withValues(
+      alpha: borderColor.a * effectiveOpacity,
     );
 
     if (elevation > 0) {

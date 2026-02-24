@@ -14,6 +14,10 @@ import 'package:flutter/gestures.dart'
         VerticalDragGestureRecognizer;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'helper/helper.dart'
+    // On web: uses HTML Canvas 2D implementations (web_helper.dart).
+    // Elsewhere: uses no-op stubs (helper.dart) because there is no HTML canvas.
+    if (dart.library.js_interop) 'helper/web_helper.dart';
 
 const double _kMinimumStrokeWidth = 0.8;
 const double _kMaximumStrokeWidth = 5.0;
@@ -1063,17 +1067,17 @@ class RenderSignaturePad extends RenderBox {
         '${(backgroundColor.r * 255).toInt()},${(backgroundColor.g * 255).toInt()},${(backgroundColor.b * 255).toInt()},${backgroundColor.a.toStringAsFixed(2)}';
 
     //Drawing the background of the SignaturePad
-    context2D.fillStyle = 'rgba($backgroundFillColor)';
-    context2D.fillRect(0, 0, size.width, size.height);
-    context2D.fill();
+    fillStyle(context2D, backgroundFillColor);
+    fillRect(context2D, size);
+    fill(context2D);
 
-    context2D.beginPath();
+    beginPath(context2D);
 
     if (!_restrictBezierPathCalculation) {
       for (int i = 0; i < _dotPoints.length; i++) {
         final Offset point = _dotPoints[i];
-        context2D.moveTo(point.dx, point.dy);
-        context2D.arc(
+        drawContext2DArc(
+          context2D,
           point.dx,
           point.dy,
           (_minimumStrokeWidth + _maximumStrokeWidth) / 2,
@@ -1084,8 +1088,8 @@ class RenderSignaturePad extends RenderBox {
       }
 
       for (int i = 0; i < _bezierPoints.length; i++) {
-        context2D.moveTo(_bezierPoints[i].x, _bezierPoints[i].y);
-        context2D.arc(
+        drawContext2DArc(
+          context2D,
           _bezierPoints[i].x,
           _bezierPoints[i].y,
           _bezierPoints[i].width / 2,
@@ -1095,14 +1099,14 @@ class RenderSignaturePad extends RenderBox {
         );
       }
 
-      context2D.fillStyle = 'rgba($strokePenColor)';
-      context2D.fill();
+      fillStyle(context2D, strokePenColor);
+      fill(context2D);
     } else {
       for (int i = 0; i < _data.length; i++) {
         if (_data[i].length == 1) {
           final _TouchPoint point = _data[i][0];
-          context2D.moveTo(point.x, point.y);
-          context2D.arc(
+          drawContext2DArc(
+            context2D,
             point.x,
             point.y,
             (_minimumStrokeWidth + _maximumStrokeWidth) / 2,
@@ -1110,21 +1114,26 @@ class RenderSignaturePad extends RenderBox {
             pi * 2,
             true,
           );
-          context2D.fillStyle = 'rgba($strokePenColor)';
-          context2D.fill();
+          fillStyle(context2D, strokePenColor);
+          fill(context2D);
         } else {
           final List<_TouchPoint> drawPath = _data[i];
           for (int i = 0; i < drawPath.length; i++) {
             if (i < drawPath.length - 1) {
-              context2D.moveTo(drawPath[i].x, drawPath[i].y);
-              context2D.lineTo(drawPath[i + 1].x, drawPath[i + 1].y);
+              drawContext2DLine(
+                context2D,
+                drawPath[i].x,
+                drawPath[i].y,
+                drawPath[i + 1].x,
+                drawPath[i + 1].y,
+              );
             }
           }
 
-          context2D.lineWidth = _maximumStrokeWidth;
-          context2D.strokeStyle = 'rgba($strokePenColor)';
-          context2D.lineCap = 'round';
-          context2D.stroke();
+          lineWidth(context2D, _maximumStrokeWidth);
+          strokeStyle(context2D, strokePenColor);
+          lineCap(context2D, 'round');
+          stroke(context2D);
         }
       }
     }
@@ -1193,7 +1202,7 @@ class RenderSignaturePad extends RenderBox {
   @override
   void describeSemanticsConfiguration(SemanticsConfiguration config) {
     super.describeSemanticsConfiguration(config);
-    config.isFocusable = true;
+    config.isFocused = true;
   }
 }
 

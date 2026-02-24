@@ -1026,8 +1026,8 @@ class _MonthViewRenderObject extends CustomCalendarRenderObject {
     final TextStyle todayStyle = calendarTheme.todayTextStyle!;
     final TextStyle currentMonthTextStyle = calendarTheme.activeDatesTextStyle!;
     final TextStyle previousMonthTextStyle =
-        calendarTheme.trailingDatesTextStyle!;
-    final TextStyle nextMonthTextStyle = calendarTheme.leadingDatesTextStyle!;
+        calendarTheme.leadingDatesTextStyle!;
+    final TextStyle nextMonthTextStyle = calendarTheme.trailingDatesTextStyle!;
     final TextStyle? blackoutDatesStyle = calendarTheme.blackoutDatesTextStyle;
     final TextStyle disabledTextStyle = currentMonthTextStyle.copyWith(
       color:

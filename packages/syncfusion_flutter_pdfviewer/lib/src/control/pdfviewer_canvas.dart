@@ -183,8 +183,13 @@ class PdfViewerCanvas extends LeafRenderObjectWidget {
       ..interactionMode = interactionMode
       ..isMobileWebView = isMobileWebView
       ..enableTextSelection = enableTextSelection
-      ..enableDocumentLinkNavigation = enableDocumentLinkNavigation
-      ..enableHyperlinkNavigation = enableHyperlinkNavigation
+      // Enables hyperlink and document link navigation only when annotation mode is set to none.
+      ..enableDocumentLinkNavigation =
+          (pdfViewerController.annotationMode == PdfAnnotationMode.none) &&
+          enableDocumentLinkNavigation
+      ..enableHyperlinkNavigation =
+          (pdfViewerController.annotationMode == PdfAnnotationMode.none) &&
+          enableHyperlinkNavigation
       ..canShowHyperlinkDialog = canShowHyperlinkDialog
       ..currentSearchTextHighlightColor = currentSearchTextHighlightColor
       ..otherSearchTextHighlightColor = otherSearchTextHighlightColor
@@ -356,7 +361,9 @@ class CanvasRenderBox extends RenderBox {
   bool _isHyperLinkTapped = false;
   bool _isMousePointer = false;
   double _startBubbleTapX = 0;
+  double _startBubbleTapY = 0;
   double _endBubbleTapX = 0;
+  double _endBubbleTapY = 0;
   final double _bubbleSize = 16.0;
   final double _jumpOffset = 10.0;
   final double _maximumZoomLevel = 2.0;
@@ -380,6 +387,7 @@ class CanvasRenderBox extends RenderBox {
   late final PdfPageRotateAngle _rotatedAngle =
       pdfDocument!.pages[pageIndex].rotation;
   bool _isConsecutiveTap = false;
+  bool _isSelectedTextContainsRotatedGlyph = false;
 
   @override
   void handleEvent(PointerEvent event, BoxHitTestEntry entry) {
@@ -1213,6 +1221,7 @@ class CanvasRenderBox extends RenderBox {
   /// Handles the long press started event.cursorMode
   void handleLongPressStart(LongPressStartDetails details) {
     _isConsecutiveTap = false;
+    _isSelectedTextContainsRotatedGlyph = false;
     if (kIsDesktop && !isMobileWebView && pdfDocument != null) {
       clearMouseSelection();
       final bool isTOC = findTOC(details.localPosition);
@@ -1268,10 +1277,12 @@ class CanvasRenderBox extends RenderBox {
       _dragDetails = details.localPosition;
       if (_startBubbleDragging) {
         _startBubbleTapX = details.localPosition.dx;
+        _startBubbleTapY = details.localPosition.dy;
         markNeedsPaint();
         triggerNullCallback();
       } else if (_endBubbleDragging) {
         _endBubbleTapX = details.localPosition.dx;
+        _endBubbleTapY = details.localPosition.dy;
         markNeedsPaint();
         if (onTextSelectionChanged != null) {
           onTextSelectionChanged!(PdfTextSelectionChangedDetails(null, null));
@@ -1718,11 +1729,22 @@ class CanvasRenderBox extends RenderBox {
       final double startBubbleY =
           _textSelectionHelper.startBubbleY! /
           _textSelectionHelper.heightPercentage!;
-      if (details.dx >= startBubbleX - (_bubbleSize * _maximumZoomLevel) &&
-          details.dx <= startBubbleX &&
-          details.dy >= startBubbleY - _bubbleSize &&
-          details.dy <= startBubbleY + _bubbleSize) {
-        return true;
+      if (_isSelectedTextContainsRotatedGlyph) {
+        if (_rotatedAngle == PdfPageRotateAngle.rotateAngle90) {
+          if (details.dy <= startBubbleY + (_bubbleSize * _maximumZoomLevel) &&
+              details.dy >= startBubbleY &&
+              details.dx >= startBubbleX - _bubbleSize &&
+              details.dx <= startBubbleX + _bubbleSize) {
+            return true;
+          }
+        }
+      } else {
+        if (details.dx >= startBubbleX - (_bubbleSize * _maximumZoomLevel) &&
+            details.dx <= startBubbleX &&
+            details.dy >= startBubbleY - _bubbleSize &&
+            details.dy <= startBubbleY + _bubbleSize) {
+          return true;
+        }
       }
     }
     return false;
@@ -1737,11 +1759,22 @@ class CanvasRenderBox extends RenderBox {
       final double endBubbleY =
           _textSelectionHelper.endBubbleY! /
           _textSelectionHelper.heightPercentage!;
-      if (details.dx >= endBubbleX &&
-          details.dx <= endBubbleX + (_bubbleSize * _maximumZoomLevel) &&
-          details.dy >= endBubbleY - _bubbleSize &&
-          details.dy <= endBubbleY + _bubbleSize) {
-        return true;
+      if (_isSelectedTextContainsRotatedGlyph) {
+        if (_rotatedAngle == PdfPageRotateAngle.rotateAngle90) {
+          if (details.dy <= endBubbleY &&
+              details.dy >= endBubbleY - (_bubbleSize * _maximumZoomLevel) &&
+              details.dx >= endBubbleX - _bubbleSize &&
+              details.dx <= endBubbleX + _bubbleSize) {
+            return true;
+          }
+        }
+      } else {
+        if (details.dx >= endBubbleX &&
+            details.dx <= endBubbleX + (_bubbleSize * _maximumZoomLevel) &&
+            details.dy >= endBubbleY - _bubbleSize &&
+            details.dy <= endBubbleY + _bubbleSize) {
+          return true;
+        }
       }
     }
     return false;
@@ -1881,6 +1914,8 @@ class CanvasRenderBox extends RenderBox {
   /// clears Text Selection.
   bool clearSelection() {
     _isRTLText = false;
+    _isSelectedTextContainsRotatedGlyph = false;
+    _isConsecutiveTap = false;
     clearMouseSelection();
     final bool clearTextSelection = !_textSelectionHelper.selectionEnabled;
     if (_textSelectionHelper.selectionEnabled) {
@@ -2022,6 +2057,9 @@ class CanvasRenderBox extends RenderBox {
     final double glyphCenterY = textGlyph.bounds.center.dy;
     final double top = startGlyph.bounds.top;
     final double bottom = startGlyph.bounds.bottom;
+    final double left = startGlyph.bounds.left;
+    final double right = startGlyph.bounds.right;
+
     if (isRTLText && !_isConsecutiveTap) {
       if ((glyphCenterY > top && glyphCenterY < startBubbleDetails.dy) &&
           (glyphCenterX < startGlyph.bounds.right || glyphCenterY > bottom) &&
@@ -2041,21 +2079,45 @@ class CanvasRenderBox extends RenderBox {
         }
       }
     } else {
-      if ((glyphCenterY > top && glyphCenterY < endBubbleDetails.dy) &&
-          (glyphCenterX > startGlyph.bounds.left || glyphCenterY > bottom) &&
-          (textGlyph.bounds.bottom < endBubbleDetails.dy ||
-              glyphCenterX < endBubbleDetails.dx)) {
-        return true;
-      }
-      if (endBubbleDetails.dy < top ||
-          (endBubbleDetails.dy < bottom &&
-              endBubbleDetails.dx < startGlyph.bounds.left)) {
-        if ((glyphCenterY > endBubbleDetails.dy && glyphCenterY < bottom) &&
-            (glyphCenterX > endBubbleDetails.dx ||
-                textGlyph.bounds.top > endBubbleDetails.dy) &&
-            (textGlyph.bounds.bottom < top ||
-                glyphCenterX < startGlyph.bounds.left)) {
+      if (textGlyph.isRotated) {
+        if (_rotatedAngle == PdfPageRotateAngle.rotateAngle90) {
+          if ((glyphCenterX > left && glyphCenterX < endBubbleDetails.dx) &&
+              (glyphCenterY < startGlyph.bounds.bottom ||
+                  glyphCenterX > right) &&
+              (textGlyph.bounds.right < endBubbleDetails.dx ||
+                  glyphCenterY > endBubbleDetails.dy)) {
+            return true;
+          }
+
+          if (endBubbleDetails.dx < left ||
+              (endBubbleDetails.dx < right &&
+                  endBubbleDetails.dy > startGlyph.bounds.bottom)) {
+            if ((glyphCenterX > endBubbleDetails.dx && glyphCenterX < right) &&
+                (glyphCenterY < endBubbleDetails.dy ||
+                    textGlyph.bounds.left > endBubbleDetails.dx) &&
+                (textGlyph.bounds.right < left ||
+                    glyphCenterY > startGlyph.bounds.top)) {
+              return true;
+            }
+          }
+        }
+      } else {
+        if ((glyphCenterY > top && glyphCenterY < endBubbleDetails.dy) &&
+            (glyphCenterX > startGlyph.bounds.left || glyphCenterY > bottom) &&
+            (textGlyph.bounds.bottom < endBubbleDetails.dy ||
+                glyphCenterX < endBubbleDetails.dx)) {
           return true;
+        }
+        if (endBubbleDetails.dy < top ||
+            (endBubbleDetails.dy < bottom &&
+                endBubbleDetails.dx < startGlyph.bounds.left)) {
+          if ((glyphCenterY > endBubbleDetails.dy && glyphCenterY < bottom) &&
+              (glyphCenterX > endBubbleDetails.dx ||
+                  textGlyph.bounds.top > endBubbleDetails.dy) &&
+              (textGlyph.bounds.bottom < top ||
+                  glyphCenterX < startGlyph.bounds.left)) {
+            return true;
+          }
         }
       }
     }
@@ -2076,19 +2138,35 @@ class CanvasRenderBox extends RenderBox {
     Paint bubblePaint,
     Offset startBubbleOffset,
   ) {
-    canvas.drawRRect(
-      RRect.fromLTRBAndCorners(
-        startBubbleOffset.dx - (_bubbleSize / _zoomPercentage),
-        startBubbleOffset.dy,
-        startBubbleOffset.dx,
-        startBubbleOffset.dy + (_bubbleSize / _zoomPercentage),
-        topLeft: const Radius.circular(10.0),
-        topRight: const Radius.circular(1.0),
-        bottomRight: const Radius.circular(10.0),
-        bottomLeft: const Radius.circular(10.0),
-      ),
-      bubblePaint,
-    );
+    if (_isSelectedTextContainsRotatedGlyph) {
+      canvas.drawRRect(
+        RRect.fromLTRBAndCorners(
+          startBubbleOffset.dx,
+          startBubbleOffset.dy,
+          startBubbleOffset.dx + (_bubbleSize / _zoomPercentage),
+          startBubbleOffset.dy + (_bubbleSize / _zoomPercentage),
+          topLeft: const Radius.circular(1.0),
+          topRight: const Radius.circular(10.0),
+          bottomRight: const Radius.circular(10.0),
+          bottomLeft: const Radius.circular(10.0),
+        ),
+        bubblePaint,
+      );
+    } else {
+      canvas.drawRRect(
+        RRect.fromLTRBAndCorners(
+          startBubbleOffset.dx - (_bubbleSize / _zoomPercentage),
+          startBubbleOffset.dy,
+          startBubbleOffset.dx,
+          startBubbleOffset.dy + (_bubbleSize / _zoomPercentage),
+          topLeft: const Radius.circular(10.0),
+          topRight: const Radius.circular(1.0),
+          bottomRight: const Radius.circular(10.0),
+          bottomLeft: const Radius.circular(10.0),
+        ),
+        bubblePaint,
+      );
+    }
   }
 
   /// Draw the end bubble.
@@ -2097,19 +2175,35 @@ class CanvasRenderBox extends RenderBox {
     Paint bubblePaint,
     Offset endBubbleOffset,
   ) {
-    canvas.drawRRect(
-      RRect.fromLTRBAndCorners(
-        endBubbleOffset.dx,
-        endBubbleOffset.dy,
-        endBubbleOffset.dx + (_bubbleSize / _zoomPercentage),
-        endBubbleOffset.dy + (_bubbleSize / _zoomPercentage),
-        topLeft: const Radius.circular(1.0),
-        topRight: const Radius.circular(10.0),
-        bottomRight: const Radius.circular(10.0),
-        bottomLeft: const Radius.circular(10.0),
-      ),
-      bubblePaint,
-    );
+    if (_isSelectedTextContainsRotatedGlyph) {
+      canvas.drawRRect(
+        RRect.fromLTRBAndCorners(
+          endBubbleOffset.dx,
+          endBubbleOffset.dy,
+          endBubbleOffset.dx + (_bubbleSize / _zoomPercentage),
+          endBubbleOffset.dy - (_bubbleSize / _zoomPercentage),
+          topLeft: const Radius.circular(10.0),
+          bottomLeft: const Radius.circular(1.0),
+          topRight: const Radius.circular(10.0),
+          bottomRight: const Radius.circular(10.0),
+        ),
+        bubblePaint,
+      );
+    } else {
+      canvas.drawRRect(
+        RRect.fromLTRBAndCorners(
+          endBubbleOffset.dx,
+          endBubbleOffset.dy,
+          endBubbleOffset.dx + (_bubbleSize / _zoomPercentage),
+          endBubbleOffset.dy + (_bubbleSize / _zoomPercentage),
+          topLeft: const Radius.circular(1.0),
+          topRight: const Radius.circular(10.0),
+          bottomRight: const Radius.circular(10.0),
+          bottomLeft: const Radius.circular(10.0),
+        ),
+        bubblePaint,
+      );
+    }
   }
 
   /// Draw the Rect for selected text.
@@ -2394,11 +2488,22 @@ class CanvasRenderBox extends RenderBox {
                     maxY / heightPercentage,
                   );
                 }
-                if (endBubbleDetails.dy < startGlyph.bounds.top) {
-                  startOffset = Offset(
-                    endBubbleDetails.dx / heightPercentage,
-                    endBubbleDetails.dy / heightPercentage,
-                  );
+                if (glyph.isRotated) {
+                  if (_rotatedAngle == PdfPageRotateAngle.rotateAngle90) {
+                    if (endBubbleDetails.dx < startGlyph.bounds.left) {
+                      startOffset = Offset(
+                        endBubbleDetails.dx / heightPercentage,
+                        endBubbleDetails.dy / heightPercentage,
+                      );
+                    }
+                  }
+                } else {
+                  if (endBubbleDetails.dy < startGlyph.bounds.top) {
+                    startOffset = Offset(
+                      endBubbleDetails.dx / heightPercentage,
+                      endBubbleDetails.dy / heightPercentage,
+                    );
+                  }
                 }
                 _textSelectionHelper.globalSelectedRegion = Rect.fromPoints(
                   localToGlobal(startOffset),
@@ -2498,10 +2603,19 @@ class CanvasRenderBox extends RenderBox {
       double glyphPosition = 0;
       if (glyphIndex < textWord.text.length - 1) {
         final TextGlyph textGlyph = textWord.glyphs[glyphIndex];
-        final double currentGlyph =
-            textGlyph.bounds.width + textGlyph.bounds.left;
-        final double nextGlyph = textWord.glyphs[glyphIndex + 1].bounds.left;
-        glyphPosition = (currentGlyph - nextGlyph).abs();
+        if (glyph.isRotated) {
+          if (_rotatedAngle == PdfPageRotateAngle.rotateAngle90) {
+            glyphPosition =
+                (textGlyph.bounds.top -
+                        textWord.glyphs[glyphIndex + 1].bounds.bottom)
+                    .abs();
+          }
+        } else {
+          final double currentGlyphEnd = textGlyph.bounds.right;
+          final double nextGlyphStart =
+              textWord.glyphs[glyphIndex + 1].bounds.left;
+          glyphPosition = (currentGlyphEnd - nextGlyphStart).abs();
+        }
       }
       glyphText =
           (glyphPosition > 1.0)
@@ -2534,36 +2648,80 @@ class CanvasRenderBox extends RenderBox {
     for (int i = 0; i < _textSelectionHelper.textLines!.length; i++) {
       final TextLine line = _textSelectionHelper.textLines![i];
       final bool isRTLText = intl.Bidi.detectRtlDirectionality(line.text);
+      Rect extendBounds = line.bounds;
+      final isRotatedGlyph = line.wordCollection.first.glyphs.first.isRotated;
+      if (isRotatedGlyph) {
+        if (_rotatedAngle == PdfPageRotateAngle.rotateAngle90) {
+          extendBounds = Rect.fromLTRB(
+            line.bounds.left,
+            0,
+            line.bounds.right,
+            pdfDocument!.pages[_textSelectionHelper.viewId!].size.height,
+          );
+        }
+      } else {
+        /// Extends line bounds horizontally to cover full page width, allowing free space for text selection.
+        extendBounds = Rect.fromLTRB(
+          0,
+          line.bounds.top,
+          pdfDocument!.pages[_textSelectionHelper.viewId!].size.width,
+          line.bounds.bottom,
+        );
+      }
       if (!isMouseSelection) {
         if (isRTLText) {
-          if (line.bounds.contains(details * heightPercentage)) {
+          if (extendBounds.contains(details * heightPercentage)) {
             if (_startBubbleDragging && i >= _textSelectionHelper.startIndex) {
               _textSelectionHelper.endIndex = i;
             } else if (_endBubbleDragging &&
                 i <= _textSelectionHelper.endIndex) {
               _textSelectionHelper.startIndex = i;
+              break;
             }
           }
         } else {
-          if (line.bounds.contains(details * heightPercentage)) {
+          if (extendBounds.contains(details * heightPercentage)) {
             if (_startBubbleDragging && i <= _textSelectionHelper.endIndex) {
               _textSelectionHelper.startIndex = i;
             } else if (_endBubbleDragging &&
                 i >= _textSelectionHelper.startIndex) {
               _textSelectionHelper.endIndex = i;
+              break;
             }
           }
         }
-      } else if ((line.bounds.contains(details) ||
-              (_textSelectionHelper.isCursorExit &&
-                  details.dy > line.bounds.top / heightPercentage)) &&
-          i <= _textSelectionHelper.endIndex &&
-          (details.dy < startPoint.top)) {
-        _textSelectionHelper.startIndex = i;
-      } else if (line.bounds.contains(details) &&
-          i >= _textSelectionHelper.startIndex &&
-          (details.dy > startPoint.top)) {
-        _textSelectionHelper.endIndex = i;
+      } else {
+        if (isRotatedGlyph) {
+          if (_rotatedAngle == PdfPageRotateAngle.rotateAngle90) {
+            if ((extendBounds.contains(details) ||
+                    (_textSelectionHelper.isCursorExit &&
+                        details.dx > line.bounds.left / heightPercentage)) &&
+                i <= _textSelectionHelper.endIndex &&
+                (details.dx < startPoint.left)) {
+              _textSelectionHelper.startIndex = i;
+              break;
+            } else if (extendBounds.contains(details) &&
+                i >= _textSelectionHelper.startIndex &&
+                (details.dx > startPoint.left)) {
+              _textSelectionHelper.endIndex = i;
+              break;
+            }
+          }
+        } else {
+          if ((extendBounds.contains(details) ||
+                  (_textSelectionHelper.isCursorExit &&
+                      details.dy > line.bounds.top / heightPercentage)) &&
+              i <= _textSelectionHelper.endIndex &&
+              (details.dy < startPoint.top)) {
+            _textSelectionHelper.startIndex = i;
+            break;
+          } else if (extendBounds.contains(details) &&
+              i >= _textSelectionHelper.startIndex &&
+              (details.dy > startPoint.top)) {
+            _textSelectionHelper.endIndex = i;
+            break;
+          }
+        }
       }
     }
   }
@@ -2700,11 +2858,30 @@ class CanvasRenderBox extends RenderBox {
             _textSelectionHelper.endBubbleLine =
                 _textSelectionHelper.textLines![textLineIndex];
             _startBubbleTapX = textWord.bounds.bottomLeft.dx / heightPercentage;
+            _startBubbleTapY = textWord.bounds.bottomLeft.dy / heightPercentage;
             _textSelectionHelper.startBubbleY = textWord.bounds.bottomLeft.dy;
             _endBubbleTapX = textWord.bounds.bottomRight.dx / heightPercentage;
+            _endBubbleTapY = textWord.bounds.bottomRight.dy / heightPercentage;
             _textSelectionHelper.endBubbleY = textWord.bounds.bottomRight.dy;
             _textSelectionHelper.startBubbleX = textWord.bounds.bottomLeft.dx;
             _textSelectionHelper.endBubbleX = textWord.bounds.bottomRight.dx;
+            if (textWord.glyphs.first.isRotated) {
+              if (_rotatedAngle == PdfPageRotateAngle.rotateAngle90) {
+                _isSelectedTextContainsRotatedGlyph = true;
+                _startBubbleTapX =
+                    textWord.bounds.bottomRight.dx / heightPercentage;
+                _startBubbleTapY =
+                    textWord.bounds.bottomRight.dy / heightPercentage;
+                _endBubbleTapX = textWord.bounds.topRight.dx / heightPercentage;
+                _endBubbleTapY = textWord.bounds.topRight.dy / heightPercentage;
+                _textSelectionHelper.startBubbleX =
+                    textWord.bounds.bottomRight.dx;
+                _textSelectionHelper.startBubbleY =
+                    textWord.bounds.bottomRight.dy;
+                _textSelectionHelper.endBubbleX = textWord.bounds.topRight.dx;
+                _textSelectionHelper.endBubbleY = textWord.bounds.topRight.dy;
+              }
+            }
             final Rect textRectOffset =
                 offset.translate(
                   textWord.bounds.left / heightPercentage,
@@ -2715,14 +2892,26 @@ class CanvasRenderBox extends RenderBox {
                   wordBounds.height / heightPercentage,
                 );
             _drawTextRect(canvas, textPaint, textRectOffset);
-            final Offset startBubbleOffset = offset.translate(
+            Offset startBubbleOffset = offset.translate(
               textWord.bounds.bottomLeft.dx / heightPercentage,
               textWord.bounds.bottomLeft.dy / heightPercentage,
             );
-            final Offset endBubbleOffset = offset.translate(
+            Offset endBubbleOffset = offset.translate(
               textWord.bounds.bottomRight.dx / heightPercentage,
               textWord.bounds.bottomRight.dy / heightPercentage,
             );
+            if (textWord.glyphs.first.isRotated) {
+              if (_rotatedAngle == PdfPageRotateAngle.rotateAngle90) {
+                startBubbleOffset = offset.translate(
+                  textWord.bounds.bottomRight.dx / heightPercentage,
+                  textWord.bounds.bottomRight.dy / heightPercentage,
+                );
+                endBubbleOffset = offset.translate(
+                  textWord.bounds.topRight.dx / heightPercentage,
+                  textWord.bounds.topRight.dy / heightPercentage,
+                );
+              }
+            }
             _drawStartBubble(canvas, bubblePaint, startBubbleOffset);
             _drawEndBubble(canvas, bubblePaint, endBubbleOffset);
             _textSelectionHelper.globalSelectedRegion = Rect.fromPoints(
@@ -2776,20 +2965,47 @@ class CanvasRenderBox extends RenderBox {
         ) {
           final TextLine line = _textSelectionHelper.textLines![textLineIndex];
           if (!_isRTLText) {
-            if (_dragDetails != null &&
-                _dragDetails!.dy <=
-                    _textSelectionHelper.endBubbleY! / heightPercentage &&
-                _dragDetails!.dy >= (line.bounds.top / heightPercentage)) {
-              _textSelectionHelper.startBubbleLine = line;
-              _textSelectionHelper.startBubbleY = line.bounds.bottomLeft.dy;
+            if (line.wordCollection.first.glyphs.first.isRotated) {
+              if (_rotatedAngle == PdfPageRotateAngle.rotateAngle90) {
+                _isSelectedTextContainsRotatedGlyph = true;
+                if (_dragDetails != null &&
+                    _dragDetails!.dx <=
+                        _textSelectionHelper.endBubbleX! / heightPercentage &&
+                    _dragDetails!.dx >= (line.bounds.left / heightPercentage)) {
+                  _textSelectionHelper.startBubbleLine = line;
+                  _textSelectionHelper.startBubbleX = line.bounds.right;
+                }
+              }
+            } else {
+              if (_dragDetails != null &&
+                  _dragDetails!.dy <=
+                      _textSelectionHelper.endBubbleY! / heightPercentage &&
+                  _dragDetails!.dy >= (line.bounds.top / heightPercentage)) {
+                _textSelectionHelper.startBubbleLine = line;
+                _textSelectionHelper.startBubbleY = line.bounds.bottomLeft.dy;
+              }
             }
-            if (_dragDetails != null &&
-                _dragDetails!.dy >=
-                    _textSelectionHelper.endBubbleY! / heightPercentage) {
-              _textSelectionHelper.startBubbleLine =
-                  _textSelectionHelper.endBubbleLine;
-              _textSelectionHelper.startBubbleY =
-                  _textSelectionHelper.endBubbleLine!.bounds.bottom;
+
+            if (line.wordCollection.first.glyphs.first.isRotated) {
+              if (_rotatedAngle == PdfPageRotateAngle.rotateAngle90) {
+                if (_dragDetails != null &&
+                    _dragDetails!.dx >=
+                        _textSelectionHelper.endBubbleX! / heightPercentage) {
+                  _textSelectionHelper.startBubbleLine =
+                      _textSelectionHelper.endBubbleLine;
+                  _textSelectionHelper.startBubbleX =
+                      _textSelectionHelper.endBubbleLine!.bounds.right;
+                }
+              }
+            } else {
+              if (_dragDetails != null &&
+                  _dragDetails!.dy >=
+                      _textSelectionHelper.endBubbleY! / heightPercentage) {
+                _textSelectionHelper.startBubbleLine =
+                    _textSelectionHelper.endBubbleLine;
+                _textSelectionHelper.startBubbleY =
+                    _textSelectionHelper.endBubbleLine!.bounds.bottom;
+              }
             }
           } else {
             if (_dragDetails != null &&
@@ -2830,87 +3046,190 @@ class CanvasRenderBox extends RenderBox {
               glyphIndex++
             ) {
               final TextGlyph textGlyph = textWord.glyphs[glyphIndex];
-              if (_startBubbleTapX >=
-                      (textGlyph.bounds.bottomLeft.dx / heightPercentage) &&
-                  !_isRTLText &&
-                  _startBubbleTapX <=
-                      (textGlyph.bounds.bottomRight.dx / heightPercentage)) {
-                _textSelectionHelper.startBubbleX =
-                    textGlyph.bounds.bottomLeft.dx;
-                _textSelectionHelper.firstSelectedGlyph = textGlyph;
-              } else if (_endBubbleTapX >=
-                      (textGlyph.bounds.bottomLeft.dx / heightPercentage) &&
-                  _isRTLText &&
-                  _endBubbleTapX <=
-                      (textGlyph.bounds.bottomRight.dx / heightPercentage)) {
-                _textSelectionHelper.endBubbleX =
-                    textGlyph.bounds.bottomRight.dx;
-                _textSelectionHelper.firstSelectedGlyph = textGlyph;
+              if (!_isRTLText) {
+                if (line.wordCollection.first.glyphs.first.isRotated) {
+                  if (_rotatedAngle == PdfPageRotateAngle.rotateAngle90) {
+                    if (_startBubbleTapY <=
+                            (textGlyph.bounds.bottom / heightPercentage) &&
+                        _startBubbleTapY >=
+                            (textGlyph.bounds.top / heightPercentage)) {
+                      _textSelectionHelper.startBubbleY =
+                          textGlyph.bounds.bottomRight.dy;
+                      _textSelectionHelper.firstSelectedGlyph = textGlyph;
+                    }
+                  }
+                } else {
+                  if (_startBubbleTapX >=
+                          (textGlyph.bounds.bottomLeft.dx / heightPercentage) &&
+                      _startBubbleTapX <=
+                          (textGlyph.bounds.bottomRight.dx /
+                              heightPercentage)) {
+                    _textSelectionHelper.startBubbleX =
+                        textGlyph.bounds.bottomLeft.dx;
+                    _textSelectionHelper.firstSelectedGlyph = textGlyph;
+                  }
+                }
+              } else {
+                if (_endBubbleTapX >=
+                        (textGlyph.bounds.bottomLeft.dx / heightPercentage) &&
+                    _endBubbleTapX <=
+                        (textGlyph.bounds.bottomRight.dx / heightPercentage)) {
+                  _textSelectionHelper.endBubbleX =
+                      textGlyph.bounds.bottomRight.dx;
+                  _textSelectionHelper.firstSelectedGlyph = textGlyph;
+                }
               }
             }
           }
           if (!_isRTLText) {
-            if (_startBubbleTapX <
-                (_textSelectionHelper.startBubbleLine!.bounds.bottomLeft.dx /
-                    heightPercentage)) {
-              _textSelectionHelper.startBubbleX =
-                  _textSelectionHelper.startBubbleLine!.bounds.bottomLeft.dx;
-              _textSelectionHelper.firstSelectedGlyph =
-                  _textSelectionHelper
-                      .startBubbleLine!
-                      .wordCollection
-                      .first
-                      .glyphs
-                      .first;
-            }
-            if (_startBubbleTapX >=
-                (_textSelectionHelper.startBubbleLine!.bounds.bottomRight.dx /
-                    heightPercentage)) {
-              _textSelectionHelper.startBubbleX =
-                  _textSelectionHelper
-                      .startBubbleLine!
-                      .wordCollection
-                      .last
-                      .glyphs
-                      .last
-                      .bounds
-                      .bottomLeft
-                      .dx;
-              _textSelectionHelper.firstSelectedGlyph =
-                  _textSelectionHelper
-                      .startBubbleLine!
-                      .wordCollection
-                      .last
-                      .glyphs
-                      .last;
-            }
-            if (_textSelectionHelper.startBubbleLine!.bounds.bottom /
-                        heightPercentage ==
-                    _textSelectionHelper.endBubbleLine!.bounds.bottom /
-                        heightPercentage &&
-                _startBubbleTapX >= _endBubbleTapX) {
-              for (
-                int wordIndex = 0;
-                wordIndex <
-                    _textSelectionHelper.startBubbleLine!.wordCollection.length;
-                wordIndex++
-              ) {
-                final TextWord textWord =
+            if (line.wordCollection.first.glyphs.first.isRotated) {
+              if (_rotatedAngle == PdfPageRotateAngle.rotateAngle90) {
+                if (_startBubbleTapY >
+                    (_textSelectionHelper.startBubbleLine!.bounds.bottom /
+                        heightPercentage)) {
+                  _textSelectionHelper.startBubbleY =
+                      _textSelectionHelper.startBubbleLine!.bounds.bottom;
+                  _textSelectionHelper.firstSelectedGlyph =
+                      _textSelectionHelper
+                          .startBubbleLine!
+                          .wordCollection
+                          .first
+                          .glyphs
+                          .first;
+                }
+              }
+            } else {
+              if (_startBubbleTapX <
+                  (_textSelectionHelper.startBubbleLine!.bounds.bottomLeft.dx /
+                      heightPercentage)) {
+                _textSelectionHelper.startBubbleX =
+                    _textSelectionHelper.startBubbleLine!.bounds.bottomLeft.dx;
+                _textSelectionHelper.firstSelectedGlyph =
                     _textSelectionHelper
                         .startBubbleLine!
-                        .wordCollection[wordIndex];
+                        .wordCollection
+                        .first
+                        .glyphs
+                        .first;
+              }
+            }
+
+            if (line.wordCollection.first.glyphs.first.isRotated) {
+              if (_rotatedAngle == PdfPageRotateAngle.rotateAngle90) {
+                if (_startBubbleTapY <=
+                    (_textSelectionHelper.startBubbleLine!.bounds.top /
+                        heightPercentage)) {
+                  _textSelectionHelper.startBubbleY =
+                      _textSelectionHelper
+                          .startBubbleLine!
+                          .wordCollection
+                          .last
+                          .glyphs
+                          .last
+                          .bounds
+                          .bottom;
+                  _textSelectionHelper.firstSelectedGlyph =
+                      _textSelectionHelper
+                          .startBubbleLine!
+                          .wordCollection
+                          .last
+                          .glyphs
+                          .last;
+                }
+              }
+            } else {
+              if (_startBubbleTapX >=
+                  (_textSelectionHelper.startBubbleLine!.bounds.bottomRight.dx /
+                      heightPercentage)) {
+                _textSelectionHelper.startBubbleX =
+                    _textSelectionHelper
+                        .startBubbleLine!
+                        .wordCollection
+                        .last
+                        .glyphs
+                        .last
+                        .bounds
+                        .bottomLeft
+                        .dx;
+                _textSelectionHelper.firstSelectedGlyph =
+                    _textSelectionHelper
+                        .startBubbleLine!
+                        .wordCollection
+                        .last
+                        .glyphs
+                        .last;
+              }
+            }
+
+            if (line.wordCollection.first.glyphs.first.isRotated) {
+              if (_rotatedAngle == PdfPageRotateAngle.rotateAngle90) {
+                if (_textSelectionHelper.startBubbleLine!.bounds.right /
+                            heightPercentage ==
+                        _textSelectionHelper.endBubbleLine!.bounds.right /
+                            heightPercentage &&
+                    _startBubbleTapY <= _endBubbleTapY) {
+                  for (
+                    int wordIndex = 0;
+                    wordIndex <
+                        _textSelectionHelper
+                            .startBubbleLine!
+                            .wordCollection
+                            .length;
+                    wordIndex++
+                  ) {
+                    final TextWord textWord =
+                        _textSelectionHelper
+                            .startBubbleLine!
+                            .wordCollection[wordIndex];
+                    for (
+                      int glyphIndex = 0;
+                      glyphIndex < textWord.glyphs.length;
+                      glyphIndex++
+                    ) {
+                      final TextGlyph textGlyph = textWord.glyphs[glyphIndex];
+                      if (textGlyph.bounds.top / heightPercentage ==
+                          _textSelectionHelper.endBubbleY! / heightPercentage) {
+                        _textSelectionHelper.startBubbleY =
+                            textGlyph.bounds.bottom;
+                        _textSelectionHelper.firstSelectedGlyph = textGlyph;
+                        break;
+                      }
+                    }
+                  }
+                }
+              }
+            } else {
+              if (_textSelectionHelper.startBubbleLine!.bounds.bottom /
+                          heightPercentage ==
+                      _textSelectionHelper.endBubbleLine!.bounds.bottom /
+                          heightPercentage &&
+                  _startBubbleTapX >= _endBubbleTapX) {
                 for (
-                  int glyphIndex = 0;
-                  glyphIndex < textWord.glyphs.length;
-                  glyphIndex++
+                  int wordIndex = 0;
+                  wordIndex <
+                      _textSelectionHelper
+                          .startBubbleLine!
+                          .wordCollection
+                          .length;
+                  wordIndex++
                 ) {
-                  final TextGlyph textGlyph = textWord.glyphs[glyphIndex];
-                  if (textGlyph.bounds.bottomRight.dx / heightPercentage ==
-                      _textSelectionHelper.endBubbleX! / heightPercentage) {
-                    _textSelectionHelper.startBubbleX =
-                        textGlyph.bounds.bottomLeft.dx;
-                    _textSelectionHelper.firstSelectedGlyph = textGlyph;
-                    break;
+                  final TextWord textWord =
+                      _textSelectionHelper
+                          .startBubbleLine!
+                          .wordCollection[wordIndex];
+                  for (
+                    int glyphIndex = 0;
+                    glyphIndex < textWord.glyphs.length;
+                    glyphIndex++
+                  ) {
+                    final TextGlyph textGlyph = textWord.glyphs[glyphIndex];
+                    if (textGlyph.bounds.bottomRight.dx / heightPercentage ==
+                        _textSelectionHelper.endBubbleX! / heightPercentage) {
+                      _textSelectionHelper.startBubbleX =
+                          textGlyph.bounds.bottomLeft.dx;
+                      _textSelectionHelper.firstSelectedGlyph = textGlyph;
+                      break;
+                    }
                   }
                 }
               }
@@ -2970,30 +3289,47 @@ class CanvasRenderBox extends RenderBox {
           textLineIndex++
         ) {
           final TextLine line = _textSelectionHelper.textLines![textLineIndex];
-          if (_dragDetails != null &&
-              !_isRTLText &&
-              _dragDetails!.dy >=
-                  (_textSelectionHelper.startBubbleLine!.bounds.top /
-                      heightPercentage) &&
-              _dragDetails!.dy >= (line.bounds.topLeft.dy / heightPercentage)) {
-            _textSelectionHelper.endBubbleLine = line;
-            _textSelectionHelper.endBubbleY = line.bounds.bottomRight.dy;
-          }
-          if (_dragDetails != null &&
-              _isRTLText &&
-              _dragDetails!.dy >=
-                  (_textSelectionHelper.startBubbleLine!.bounds.top /
-                      heightPercentage) &&
-              _dragDetails!.dy >= (line.bounds.topLeft.dy / heightPercentage)) {
-            _textSelectionHelper.startBubbleLine = line;
-            _textSelectionHelper.startBubbleY = line.bounds.bottomRight.dy;
-          } else if (_dragDetails != null &&
-              _isRTLText &&
-              _dragDetails!.dy <=
-                  (_textSelectionHelper.startBubbleLine!.bounds.bottom /
-                      heightPercentage)) {
-            _textSelectionHelper.startBubbleLine = line;
-            _textSelectionHelper.startBubbleY = line.bounds.bottom;
+          if (!_isRTLText) {
+            if (line.wordCollection.first.glyphs.first.isRotated) {
+              if (_rotatedAngle == PdfPageRotateAngle.rotateAngle90) {
+                _isSelectedTextContainsRotatedGlyph = true;
+                if (_dragDetails != null &&
+                    _dragDetails!.dx >=
+                        (_textSelectionHelper.startBubbleLine!.bounds.left /
+                            heightPercentage) &&
+                    _dragDetails!.dx <=
+                        (line.bounds.right / heightPercentage)) {
+                  _textSelectionHelper.endBubbleLine = line;
+                  _textSelectionHelper.endBubbleX = line.bounds.topRight.dx;
+                }
+              }
+            } else {
+              if (_dragDetails != null &&
+                  _dragDetails!.dy >=
+                      (_textSelectionHelper.startBubbleLine!.bounds.top /
+                          heightPercentage) &&
+                  _dragDetails!.dy >=
+                      (line.bounds.topLeft.dy / heightPercentage)) {
+                _textSelectionHelper.endBubbleLine = line;
+                _textSelectionHelper.endBubbleY = line.bounds.bottomRight.dy;
+              }
+            }
+          } else {
+            if (_dragDetails != null &&
+                _dragDetails!.dy >=
+                    (_textSelectionHelper.startBubbleLine!.bounds.top /
+                        heightPercentage) &&
+                _dragDetails!.dy >=
+                    (line.bounds.topLeft.dy / heightPercentage)) {
+              _textSelectionHelper.startBubbleLine = line;
+              _textSelectionHelper.startBubbleY = line.bounds.bottomRight.dy;
+            } else if (_dragDetails != null &&
+                _dragDetails!.dy <=
+                    (_textSelectionHelper.startBubbleLine!.bounds.bottom /
+                        heightPercentage)) {
+              _textSelectionHelper.startBubbleLine = line;
+              _textSelectionHelper.startBubbleY = line.bounds.bottom;
+            }
           }
           for (
             int wordIndex = 0;
@@ -3023,72 +3359,150 @@ class CanvasRenderBox extends RenderBox {
               glyphIndex++
             ) {
               final TextGlyph textGlyph = textWord.glyphs[glyphIndex];
-              if (!_isRTLText &&
-                  _endBubbleTapX >=
-                      (textGlyph.bounds.bottomLeft.dx / heightPercentage) &&
-                  _endBubbleTapX <=
-                      (textGlyph.bounds.bottomRight.dx / heightPercentage)) {
-                _textSelectionHelper.endBubbleX =
-                    textGlyph.bounds.bottomRight.dx;
-              } else if (_isRTLText &&
-                  _startBubbleTapX >=
-                      (textGlyph.bounds.bottomLeft.dx / heightPercentage) &&
-                  _startBubbleTapX <=
-                      (textGlyph.bounds.bottomRight.dx / heightPercentage)) {
-                _textSelectionHelper.startBubbleX =
-                    textGlyph.bounds.bottomRight.dx;
+              if (!_isRTLText) {
+                if (line.wordCollection.first.glyphs.first.isRotated) {
+                  if (_rotatedAngle == PdfPageRotateAngle.rotateAngle90) {
+                    if (_endBubbleTapY <=
+                            (textGlyph.bounds.bottomRight.dy /
+                                heightPercentage) &&
+                        _endBubbleTapY >=
+                            (textGlyph.bounds.topRight.dy / heightPercentage)) {
+                      _textSelectionHelper.endBubbleY =
+                          textGlyph.bounds.topRight.dy;
+                    }
+                  }
+                } else {
+                  if (_endBubbleTapX >=
+                          (textGlyph.bounds.bottomLeft.dx / heightPercentage) &&
+                      _endBubbleTapX <=
+                          (textGlyph.bounds.bottomRight.dx /
+                              heightPercentage)) {
+                    _textSelectionHelper.endBubbleX =
+                        textGlyph.bounds.bottomRight.dx;
+                  }
+                }
+              } else {
+                if (_startBubbleTapX >=
+                        (textGlyph.bounds.bottomLeft.dx / heightPercentage) &&
+                    _startBubbleTapX <=
+                        (textGlyph.bounds.bottomRight.dx / heightPercentage)) {
+                  _textSelectionHelper.startBubbleX =
+                      textGlyph.bounds.bottomRight.dx;
+                }
               }
             }
           }
           if (!_isRTLText) {
-            if (_endBubbleTapX.floor() >
-                (_textSelectionHelper.endBubbleLine!.bounds.bottomRight.dx /
-                        heightPercentage)
-                    .floor()) {
-              _textSelectionHelper.endBubbleX =
-                  _textSelectionHelper.endBubbleLine!.bounds.bottomRight.dx;
-            }
-            if (_endBubbleTapX.floor() <=
-                (_textSelectionHelper.endBubbleLine!.bounds.bottomLeft.dx /
-                        heightPercentage)
-                    .floor()) {
-              _textSelectionHelper.endBubbleX =
-                  _textSelectionHelper
-                      .endBubbleLine!
-                      .wordCollection
-                      .first
-                      .glyphs
-                      .first
-                      .bounds
-                      .bottomRight
-                      .dx;
-            }
-            if (_textSelectionHelper.endBubbleLine!.bounds.bottom /
-                        heightPercentage ==
-                    _textSelectionHelper.startBubbleLine!.bounds.bottom /
-                        heightPercentage &&
-                _endBubbleTapX < _startBubbleTapX) {
-              for (
-                int wordIndex = 0;
-                wordIndex <
-                    _textSelectionHelper.endBubbleLine!.wordCollection.length;
-                wordIndex++
-              ) {
-                final TextWord textWord =
+            if (line.wordCollection.first.glyphs.first.isRotated) {
+              if (_rotatedAngle == PdfPageRotateAngle.rotateAngle90) {
+                if (_endBubbleTapY.floor() <
+                    (_textSelectionHelper.endBubbleLine!.bounds.topRight.dy /
+                            heightPercentage)
+                        .floor()) {
+                  _textSelectionHelper.endBubbleY =
+                      _textSelectionHelper.endBubbleLine!.bounds.topRight.dy;
+                }
+                if (_endBubbleTapY.floor() >=
+                    (_textSelectionHelper.endBubbleLine!.bounds.bottomRight.dy /
+                            heightPercentage)
+                        .floor()) {
+                  _textSelectionHelper.endBubbleY =
+                      _textSelectionHelper
+                          .endBubbleLine!
+                          .wordCollection
+                          .first
+                          .glyphs
+                          .first
+                          .bounds
+                          .topRight
+                          .dy;
+                }
+
+                if (_textSelectionHelper.endBubbleLine!.bounds.right /
+                            heightPercentage ==
+                        _textSelectionHelper.startBubbleLine!.bounds.right /
+                            heightPercentage &&
+                    _endBubbleTapY > _startBubbleTapY) {
+                  for (
+                    int wordIndex = 0;
+                    wordIndex <
+                        _textSelectionHelper
+                            .endBubbleLine!
+                            .wordCollection
+                            .length;
+                    wordIndex++
+                  ) {
+                    final TextWord textWord =
+                        _textSelectionHelper
+                            .endBubbleLine!
+                            .wordCollection[wordIndex];
+                    for (
+                      int glyphIndex = 0;
+                      glyphIndex < textWord.glyphs.length;
+                      glyphIndex++
+                    ) {
+                      final TextGlyph textGlyph = textWord.glyphs[glyphIndex];
+                      if (textGlyph.bounds.bottomRight.dy / heightPercentage ==
+                          _textSelectionHelper.startBubbleY! /
+                              heightPercentage) {
+                        _textSelectionHelper.endBubbleY =
+                            textGlyph.bounds.topRight.dy;
+                        break;
+                      }
+                    }
+                  }
+                }
+              }
+            } else {
+              if (_endBubbleTapX.floor() >
+                  (_textSelectionHelper.endBubbleLine!.bounds.bottomRight.dx /
+                          heightPercentage)
+                      .floor()) {
+                _textSelectionHelper.endBubbleX =
+                    _textSelectionHelper.endBubbleLine!.bounds.bottomRight.dx;
+              }
+              if (_endBubbleTapX.floor() <=
+                  (_textSelectionHelper.endBubbleLine!.bounds.bottomLeft.dx /
+                          heightPercentage)
+                      .floor()) {
+                _textSelectionHelper.endBubbleX =
                     _textSelectionHelper
                         .endBubbleLine!
-                        .wordCollection[wordIndex];
+                        .wordCollection
+                        .first
+                        .glyphs
+                        .first
+                        .bounds
+                        .bottomRight
+                        .dx;
+              }
+              if (_textSelectionHelper.endBubbleLine!.bounds.bottom /
+                          heightPercentage ==
+                      _textSelectionHelper.startBubbleLine!.bounds.bottom /
+                          heightPercentage &&
+                  _endBubbleTapX < _startBubbleTapX) {
                 for (
-                  int glyphIndex = 0;
-                  glyphIndex < textWord.glyphs.length;
-                  glyphIndex++
+                  int wordIndex = 0;
+                  wordIndex <
+                      _textSelectionHelper.endBubbleLine!.wordCollection.length;
+                  wordIndex++
                 ) {
-                  final TextGlyph textGlyph = textWord.glyphs[glyphIndex];
-                  if (textGlyph.bounds.bottomLeft.dx / heightPercentage ==
-                      _textSelectionHelper.startBubbleX! / heightPercentage) {
-                    _textSelectionHelper.endBubbleX =
-                        textGlyph.bounds.bottomRight.dx;
-                    break;
+                  final TextWord textWord =
+                      _textSelectionHelper
+                          .endBubbleLine!
+                          .wordCollection[wordIndex];
+                  for (
+                    int glyphIndex = 0;
+                    glyphIndex < textWord.glyphs.length;
+                    glyphIndex++
+                  ) {
+                    final TextGlyph textGlyph = textWord.glyphs[glyphIndex];
+                    if (textGlyph.bounds.bottomLeft.dx / heightPercentage ==
+                        _textSelectionHelper.startBubbleX! / heightPercentage) {
+                      _textSelectionHelper.endBubbleX =
+                          textGlyph.bounds.bottomRight.dx;
+                      break;
+                    }
                   }
                 }
               }

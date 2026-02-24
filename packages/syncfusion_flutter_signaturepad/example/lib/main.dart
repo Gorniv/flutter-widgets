@@ -61,7 +61,7 @@ class _MyHomePageState extends State<_MyHomePage> {
       body: Column(
         children: [
           Padding(
-            padding: EdgeInsets.all(10),
+            padding: EdgeInsets.all(10.0),
             child: Container(
               child: SfSignaturePad(
                 key: signatureGlobalKey,

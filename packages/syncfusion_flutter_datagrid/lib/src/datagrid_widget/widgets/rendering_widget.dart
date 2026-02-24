@@ -1300,6 +1300,15 @@ class RenderVirtualizingCellsWidget extends RenderBox
       if (event is PointerDownEvent) {
         columnDragAndDropController.offset = event.localPosition;
         columnDragAndDropController.dragDelta = event.position.dx;
+
+        // To enable the feedback widget for drag-and-drop functionality.
+        final notifier =
+            configuration
+                .columnResizeController
+                .canSwitchResizeColumnCursorNotifier;
+        if (notifier.value != false) {
+          notifier.value = false;
+        }
       }
 
       if (event is PointerMoveEvent) {

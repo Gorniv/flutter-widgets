@@ -7,7 +7,7 @@ void main() {
   return runApp(const RangeSelectorApp());
 }
 
-/// This widget will be the root of application.
+/// This widget will be the root of the application.
 class RangeSelectorApp extends StatelessWidget {
   ///Initialize the instance of the [RangeSelectorApp] class.
   const RangeSelectorApp({super.key});

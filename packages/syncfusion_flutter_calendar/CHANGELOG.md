@@ -1,5 +1,37 @@
 ## Unreleased
 
+* No changes.
+
+## [31.2.15] - 11/25/2025
+
+**General**
+
+*  The compatible version of our Flutter calendar widget has been updated to Flutter SDK 3.38.
+
+## [31.2.5] - 11/04/2025
+
+**General**
+
+*  The translation for “No events” has been modified to “Etkinlik yok” from “Olay yok” for Turkish language. 
+
+## [31.2.4] - 10/28/2025
+
+**Enhancements**
+
+* \#FB70566 - The display of exceeding events has been improved for all-day events with [appointmentBuilder](https://pub.dev/documentation/syncfusion_flutter_calendar/latest/calendar/SfCalendar/appointmentBuilder.html) customization.
+
+**Breaking changes**
+
+* \#FB70575 - The [leadingDateTextStyle](https://pub.dev/documentation/syncfusion_flutter_calendar/latest/calendar/MonthCellStyle/leadingDatesTextStyle.html) now applies to dates in the previous month, while the [trailingDateTextStyle](https://pub.dev/documentation/syncfusion_flutter_calendar/latest/calendar/MonthCellStyle/trailingDatesTextStyle.html) applies to dates in the next month in the month view.
+
+## [31.1.20] - 09/17/2025
+
+**General**
+
+* The compatible version of our Flutter calendar widget has been updated to Flutter SDK 3.35.
+
+## [30.1.37] - 06/25/2025
+
 **General**
 
 * Upgraded the `timezone` package to the latest version 0.10.1.

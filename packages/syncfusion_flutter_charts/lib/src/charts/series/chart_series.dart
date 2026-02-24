@@ -2407,6 +2407,9 @@ abstract class ChartSeriesRenderer<T, D> extends RenderBox
 
   @override
   void markNeedsLayout() {
+    if (!attached) {
+      return;
+    }
     super.markNeedsLayout();
     dataLabelContainer?.refresh();
     markerContainer?.refresh();
@@ -2887,7 +2890,10 @@ class ChartSeriesController<T, D> {
     return CartesianChartPoint<D>(x: rawX, xValue: xValue, y: yValue);
   }
 
-  D? _rawXValue(CartesianSeriesRenderer seriesRenderer, num xValue) {
+  D? _rawXValue(
+    CartesianSeriesRenderer<dynamic, dynamic> seriesRenderer,
+    num xValue,
+  ) {
     final int index = seriesRenderer.xValues.indexOf(xValue);
     final RenderChartAxis xAxis = seriesRenderer.xAxis!;
 
@@ -3392,6 +3398,7 @@ abstract class CartesianSeries<T, D> extends ChartSeries<T, D> {
 abstract class CartesianSeriesRenderer<T, D> extends ChartSeriesRenderer<T, D>
     with AxisDependent {
   List<int> visibleIndexes = <int>[];
+  List<int> _viewPortIndexes = <int>[];
 
   ChartSeriesController<T, D> get controller => _controller;
   late final ChartSeriesController<T, D> _controller =
@@ -3884,11 +3891,22 @@ abstract class CartesianSeriesRenderer<T, D> extends ChartSeriesRenderer<T, D>
   @protected
   void _findVisibleIndexes() {
     visibleIndexes.clear();
+    _viewPortIndexes.clear();
     if (xAxis == null ||
         xAxis!.visibleRange == null ||
         xAxis!.visibleInterval == 0) {
       return;
     }
+
+    final bool callbackEnabled =
+        parent != null && parent!.onDataLabelRender != null ||
+        parent!.onTooltipRender != null ||
+        parent!.onMarkerRender != null ||
+        parent!.onDataLabelTapped != null ||
+        parent!.onSelectionChanged != null ||
+        onPointLongPress != null ||
+        onPointTap != null ||
+        onPointDoubleTap != null;
 
     final DoubleRange baseRange = xAxis!.visibleRange!.copyWith();
     late DoubleRange range;
@@ -3922,12 +3940,34 @@ abstract class CartesianSeriesRenderer<T, D> extends ChartSeriesRenderer<T, D>
           visibleIndexes.add(endIndex);
         }
       }
+
+      if (callbackEnabled) {
+        final int viewPortStartIndex = findIndex(
+          range.minimum.ceil(),
+          xValues,
+          end: end,
+        );
+        final int viewPortEndIndex = findIndex(
+          range.maximum.floor(),
+          xValues,
+          end: end,
+        );
+        if (viewPortStartIndex != -1) {
+          _viewPortIndexes.add(viewPortStartIndex);
+        }
+        if (viewPortEndIndex != -1) {
+          _viewPortIndexes.add(viewPortEndIndex);
+        }
+      }
     } else {
       for (int i = 0; i < dataCount; i++) {
         final num current = xValues[i];
         if (range.contains(current)) {
           visibleIndexes.add(i);
         }
+      }
+      if (callbackEnabled) {
+        _viewPortIndexes = visibleIndexes;
       }
 
       if (visibleIndexes.isNotEmpty) {
@@ -4162,7 +4202,7 @@ abstract class CartesianSeriesRenderer<T, D> extends ChartSeriesRenderer<T, D>
 
   @override
   int viewportIndex(int index, [List<int>? visibleIndexes]) {
-    return super.viewportIndex(index, visibleIndexes ?? this.visibleIndexes);
+    return super.viewportIndex(index, visibleIndexes ?? _viewPortIndexes);
   }
 
   List<ChartSegment> contains(Offset position) {
@@ -5877,7 +5917,7 @@ mixin BarSeriesTrackerMixin on ChartSegment {
     BorderRadius borderRadius,
     double trackPadding,
     double trackBorderWidth,
-    CartesianSeriesRenderer series,
+    CartesianSeriesRenderer<dynamic, dynamic> series,
   ) {
     final PointToPixelCallback transformX = series.pointToPixelX;
     final PointToPixelCallback transformY = series.pointToPixelY;
@@ -8252,7 +8292,7 @@ abstract class CircularSeries<T, D> extends ChartSeries<T, D> {
   ///   final Shader pointShader;
   ///}
   ///```
-  final ChartShaderMapper? pointShaderMapper;
+  final ChartShaderMapper<dynamic>? pointShaderMapper;
 
   /// Maps the field name, which will be considered for calculating the radius
   /// of all the data points.
@@ -8818,7 +8858,7 @@ class CircularSeriesController<T, D> {
   /// )
   /// ```
 
-  ChartPoint pixelToPoint(Offset position) {
+  ChartPoint<dynamic> pixelToPoint(Offset position) {
     int pointIndex = -1;
     for (int i = 0; i < seriesRenderer.segments.length; i++) {
       final ChartSegment segment = seriesRenderer.segments[i];
@@ -8849,7 +8889,7 @@ abstract class CircularSeriesRenderer<T, D> extends ChartSeriesRenderer<T, D>
 
   ChartValueMapper<T, num>? yValueMapper;
 
-  ChartShaderMapper? pointShaderMapper;
+  ChartShaderMapper<dynamic>? pointShaderMapper;
 
   ChartValueMapper<T, String>? pointRadiusMapper;
 
@@ -9450,7 +9490,7 @@ abstract class CircularSeriesRenderer<T, D> extends ChartSeriesRenderer<T, D>
         parent!.themeData!.textTheme.bodySmall!
           ..merge(chartThemeData!.dataLabelTextStyle)
           ..merge(dataLabelSettings.textStyle);
-    final CircularChartPoint point = current.point!;
+    final CircularChartPoint<dynamic> point = current.point!;
     if (point.isExplode) {
       point.center = calculateExplodingCenter(
         point.midAngle!,
@@ -9706,7 +9746,7 @@ abstract class CircularSeriesRenderer<T, D> extends ChartSeriesRenderer<T, D>
       segment,
     );
     TextStyle effectiveTextStyle = saturatedTextStyle(surfaceColor, style);
-    final CircularChartPoint point = dataLabelPositioned.point!;
+    final CircularChartPoint<dynamic> point = dataLabelPositioned.point!;
     if (!point.isVisible || !segments[index].isVisible || point.text == '') {
       return;
     }

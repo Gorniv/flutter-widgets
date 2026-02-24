@@ -1164,35 +1164,11 @@ class _AllDayAppointmentRenderObject extends CustomCalendarRenderObject {
       _addSelectionForAllDayPanel(context.canvas, size);
     }
 
-    if (isExpandable && _maxPosition > position && !isExpanding) {
-      if (child != null) {
-        final double endYPosition =
-            allDayPainterHeight - kAllDayAppointmentHeight;
-        final double cellEndPadding = CalendarViewHelper.getCellEndPadding(
-          calendar.cellEndPadding,
-          isMobilePlatform,
-        );
-        final List<int> keys = moreAppointmentIndex.keys.toList();
-        for (final int index in keys) {
-          if (child == null) {
-            continue;
-          }
-
-          final double xPosition =
-              isRTL
-                  ? ((visibleDates.length - index - 1) * _cellWidth) +
-                      cellEndPadding
-                  : timeLabelWidth + (index * _cellWidth);
-          context.paintChild(child, Offset(xPosition, endYPosition));
-          child = childAfter(child);
-        }
-      } else {
-        _addExpanderText(context.canvas, position, textPadding);
-      }
-    }
-
     if (isExpandable) {
       _addExpandOrCollapseIcon(context.canvas, size, position);
+      if (_maxPosition > position && !isExpanding) {
+        _addExpanderText(context.canvas, position, textPadding);
+      }
     }
 
     if (!_isHoveringAppointment) {

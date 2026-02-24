@@ -51,10 +51,12 @@ class RenderChartFadeTransition extends RenderAnimatedOpacity {
   }
 
   void refresh() {
-    // Check if the render object is still attached before marking layout
-    if (attached) {
-      markNeedsLayout();
-      (child as RenderChartElementStack?)?.refresh();
+    if (!attached) {
+      return;
+    }
+    markNeedsLayout();
+    if (child != null && child is RenderChartElementStack && child!.attached) {
+      (child! as RenderChartElementStack).refresh();
     }
   }
 
@@ -70,7 +72,9 @@ class RenderChartFadeTransition extends RenderAnimatedOpacity {
     (child as RenderChartElementStack?)?.handleMultiSeriesDataLabelCollisions();
   }
 
-  void handleDataLabelCollision(CartesianSeriesRenderer series) {
+  void handleDataLabelCollision(
+    CartesianSeriesRenderer<dynamic, dynamic> series,
+  ) {
     (child as RenderChartElementStack?)?.handleDataLabelCollision(series);
   }
 }
@@ -114,10 +118,14 @@ class RenderChartElementLayoutBuilder<T, D> extends RenderBox
   }
 
   void refresh() {
-    // Check if the render object is still attached before marking layout
-    if (attached) {
-      markNeedsBuild();
-      (child as RenderChartFadeTransition?)?.refresh();
+    if (!attached) {
+      return;
+    }
+    markNeedsBuild();
+    if (child != null &&
+        child is RenderChartFadeTransition &&
+        child!.attached) {
+      (child! as RenderChartFadeTransition).refresh();
     }
   }
 
@@ -154,7 +162,9 @@ class RenderChartElementLayoutBuilder<T, D> extends RenderBox
         ?.handleMultiSeriesDataLabelCollisions();
   }
 
-  void handleDataLabelCollision(CartesianSeriesRenderer series) {
+  void handleDataLabelCollision(
+    CartesianSeriesRenderer<dynamic, dynamic> series,
+  ) {
     (child as RenderChartFadeTransition?)?.handleDataLabelCollision(series);
   }
 
@@ -201,10 +211,10 @@ class RenderChartElementStack extends RenderBox
   ChartMarker markerAt(int pointIndex) => ChartMarker();
 
   void refresh() {
-    // Check if the render object is still attached before marking layout
-    if (attached) {
-      markNeedsLayout();
+    if (!attached) {
+      return;
     }
+    markNeedsLayout();
   }
 
   void handlePointerHover(Offset localPosition) {}
@@ -217,15 +227,19 @@ class RenderChartElementStack extends RenderBox
 
   // To handle multiple series data collision, we need to check the data label
   // collision for all the series after data label layout.
-  void handleDataLabelCollision(CartesianSeriesRenderer series) {}
+  void handleDataLabelCollision(
+    CartesianSeriesRenderer<dynamic, dynamic> series,
+  ) {}
 }
 
 abstract class CustomConstrainedLayoutBuilder<
-    ConstraintType extends Constraints> extends RenderObjectWidget {
+  ConstraintType extends Constraints
+>
+    extends RenderObjectWidget {
   const CustomConstrainedLayoutBuilder({super.key, required this.builder});
 
   final Widget Function(BuildContext context, ConstraintType constraints)
-      builder;
+  builder;
 
   @override
   RenderObjectElement createElement() =>
@@ -234,8 +248,7 @@ abstract class CustomConstrainedLayoutBuilder<
   @protected
   bool updateShouldRebuild(
     covariant CustomConstrainedLayoutBuilder<ConstraintType> oldWidget,
-  ) =>
-      true;
+  ) => true;
 }
 
 class CustomLayoutBuilderElement<ConstraintType extends Constraints>
@@ -246,7 +259,8 @@ class CustomLayoutBuilderElement<ConstraintType extends Constraints>
 
   @override
   CustomRenderConstrainedLayoutBuilder<ConstraintType, RenderObject>
-      get renderObject => super.renderObject
+  get renderObject =>
+      super.renderObject
           as CustomRenderConstrainedLayoutBuilder<ConstraintType, RenderObject>;
 
   Element? _child;
@@ -311,9 +325,10 @@ class CustomLayoutBuilderElement<ConstraintType extends Constraints>
             ErrorDescription('building $widget'),
             e,
             stack,
-            informationCollector: () => <DiagnosticsNode>[
-              if (kDebugMode) DiagnosticsDebugCreator(DebugCreator(this)),
-            ],
+            informationCollector:
+                () => <DiagnosticsNode>[
+                  if (kDebugMode) DiagnosticsDebugCreator(DebugCreator(this)),
+                ],
           ),
         );
       }
@@ -326,9 +341,10 @@ class CustomLayoutBuilderElement<ConstraintType extends Constraints>
             ErrorDescription('building $widget'),
             e,
             stack,
-            informationCollector: () => <DiagnosticsNode>[
-              if (kDebugMode) DiagnosticsDebugCreator(DebugCreator(this)),
-            ],
+            informationCollector:
+                () => <DiagnosticsNode>[
+                  if (kDebugMode) DiagnosticsDebugCreator(DebugCreator(this)),
+                ],
           ),
         );
         _child = updateChild(null, built, slot);
@@ -360,15 +376,18 @@ class CustomLayoutBuilderElement<ConstraintType extends Constraints>
   @override
   void removeRenderObjectChild(RenderObject child, Object? slot) {
     final CustomRenderConstrainedLayoutBuilder<ConstraintType, RenderObject>
-        renderObject = this.renderObject;
+    renderObject = this.renderObject;
     assert(renderObject.child == child);
     renderObject.child = null;
     assert(renderObject == this.renderObject);
   }
 }
 
-mixin CustomRenderConstrainedLayoutBuilder<ConstraintType extends Constraints,
-    ChildType extends RenderObject> on RenderObjectWithChildMixin<ChildType> {
+mixin CustomRenderConstrainedLayoutBuilder<
+  ConstraintType extends Constraints,
+  ChildType extends RenderObject
+>
+    on RenderObjectWithChildMixin<ChildType> {
   LayoutCallback<ConstraintType>? _callback;
 
   void updateCallback(LayoutCallback<ConstraintType>? value) {
