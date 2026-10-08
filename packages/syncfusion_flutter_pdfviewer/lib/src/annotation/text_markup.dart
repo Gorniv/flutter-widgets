@@ -1,5 +1,5 @@
 import 'dart:math' show Point, sqrt;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../pdfviewer.dart';
 import 'annotation.dart';

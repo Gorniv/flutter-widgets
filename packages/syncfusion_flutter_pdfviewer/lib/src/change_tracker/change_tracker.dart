@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'change_command.dart';
 
 /// Class that tracks changes in the annotation.

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart' hide DataCell, DataRow;
+import 'package:material_ui/material_ui.dart' hide DataCell, DataRow;
 
 import '../../../datagrid.dart';
 import '../grouping/grouping.dart';

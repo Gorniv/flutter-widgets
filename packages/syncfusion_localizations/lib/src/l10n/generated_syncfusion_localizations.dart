@@ -3,7 +3,7 @@
 // dart tools/localization/gen_localizations.dart --overwrite
 
 import 'dart:collection';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../global_localizations.dart';
 
 // The classes defined here encode all of the translations found in the

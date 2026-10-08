@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../linear_gauge/utils/enum.dart';
 import 'linear_marker_pointer.dart';

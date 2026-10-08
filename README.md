@@ -2,6 +2,20 @@
 
 # Syncfusion Flutter Widgets
 
+## This fork
+
+This fork includes the upstream Syncfusion 34.1.29 update, our chart fixes, and
+migrates the UI packages and examples to
+[`material_ui`](https://pub.dev/packages/material_ui). It requires Flutter
+3.47 or newer and Dart 3.13 or newer.
+
+Applications using this branch should add `material_ui: ^1.6.0` and import
+`package:material_ui/material_ui.dart` for `MaterialApp`, `ThemeData`, and other
+Material types passed to Syncfusion widgets. Use
+`GlobalMaterialLocalizations.delegates` from `material_ui` for localized apps.
+Use the fork's packages together so their themes share the same Material types.
+The bundled examples reference these local packages.
+
 Syncfusion Flutter widgets libraries include high-quality UI widgets and file-format packages to help you create rich, high-quality applications for iOS, Android, and web from a single code base. Please find the [supported platforms](https://help.syncfusion.com/flutter/system-requirements#supported-platforms) for our Flutter widgets.
 
 **Disclaimer:** This is a commercial package. To use our packages, you need to have either the Syncfusion Commercial License or Syncfusion Community license. For more details, please check the [LICENSE](https://github.com/syncfusion/flutter-examples/blob/master/LICENSE) file.

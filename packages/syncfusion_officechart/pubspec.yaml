@@ -4,8 +4,8 @@ version: 34.1.29
 homepage: https://github.com/syncfusion/flutter-widgets/tree/master/packages/syncfusion_officechart
 
 environment:
-  sdk: ^3.7.0  
-  flutter: '>=3.29.0'
+  sdk: ^3.13.0
+  flutter: ">=3.47.0"
 
 dependencies:
   flutter:

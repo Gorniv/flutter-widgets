@@ -3,7 +3,8 @@ description: This project demonstrates how to use Syncfusion Flutter Maps widget
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.7.0
+  sdk: ^3.13.0
+  flutter: ">=3.47.0"
 
 flutter:
   uses-material-design: true
@@ -12,11 +13,12 @@ flutter:
     - assets/australia.json
 
 dependencies:
+  material_ui: ^1.6.0
   flutter:
     sdk: flutter
   intl: ^0.20.2
   syncfusion_flutter_maps:
-    path: ../
+    path: ..
 
 dev_dependencies:
   flutter_test:

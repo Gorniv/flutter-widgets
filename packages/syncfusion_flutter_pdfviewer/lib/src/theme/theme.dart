@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:syncfusion_flutter_core/theme.dart';
 
 /// Holds the default values if Material 3 is not enabled.

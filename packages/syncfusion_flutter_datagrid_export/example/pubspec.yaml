@@ -4,19 +4,21 @@ publish_to: "none"
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.7.0
+  sdk: ^3.13.0
+  flutter: ">=3.47.0"
 
 flutter:
   uses-material-design: true
 
 dependencies:
+  material_ui: ^1.6.0
   flutter:
     sdk: flutter
   web: ^1.1.0
   open_file: ^3.2.1
   path_provider: ^2.0.2
   syncfusion_flutter_datagrid_export:
-    path: ../
+    path: ..
 
 dev_dependencies:
   flutter_test:

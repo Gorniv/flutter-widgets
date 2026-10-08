@@ -27,8 +27,8 @@ screenshots:
     path: screenshots/flutter-pdf-viewer-localization.png
 
 environment:
-  sdk: ^3.7.0
-  flutter: '>=3.35.1'
+  sdk: ^3.13.0
+  flutter: ">=3.47.0"
 
 flutter:
   plugin:
@@ -55,6 +55,8 @@ flutter:
         - asset: assets/fonts/RobotoMono-Regular.ttf
 
 dependencies:
+  cupertino_ui: ^1.0.0
+  material_ui: ^1.6.0
   flutter:
     sdk: flutter
   web: ^1.0.0

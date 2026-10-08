@@ -8,7 +8,7 @@ import 'package:flutter/gestures.dart'
         HitTestTarget,
         HorizontalDragGestureRecognizer,
         VerticalDragGestureRecognizer;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 
 import '../../linear_gauge/axis/linear_axis_renderer.dart';

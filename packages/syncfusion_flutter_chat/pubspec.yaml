@@ -10,13 +10,14 @@ screenshots:
     path: screenshots/flutter_appointment_selection_chat.gif
 
 environment:
-  sdk: ^3.7.0
-  flutter: ">=3.35.1"
+  sdk: ^3.13.0
+  flutter: ">=3.47.0"
 
 flutter:
   uses-material-design: true
 
 dependencies:
+  material_ui: ^1.6.0
   flutter:
     sdk: flutter
   intl: '>=0.18.1 <0.21.0'

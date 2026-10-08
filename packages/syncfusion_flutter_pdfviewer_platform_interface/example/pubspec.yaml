@@ -3,9 +3,11 @@ description: Demonstrates how to use the syncfusion_pdfviewer_platform_interface
 publish_to: 'none'
 
 environment:
-  sdk: ^3.7.0-0
+  sdk: ^3.13.0
+  flutter: ">=3.47.0"
 
 dependencies:
+  material_ui: ^1.6.0
   flutter:
     sdk: flutter
 

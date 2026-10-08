@@ -4,10 +4,12 @@ version: 34.1.29
 homepage: https://github.com/syncfusion/flutter-widgets/tree/master/packages/syncfusion_flutter_datagrid_export
 
 environment:
-  sdk: ^3.7.0
-  flutter: ">=3.35.1"
+  sdk: ^3.13.0
+  flutter: ">=3.47.0"
 
 dependencies:
+  cupertino_ui: ^1.0.0
+  material_ui: ^1.6.0
   flutter:
     sdk: flutter
   collection: ">=1.9.0 <=2.0.0"

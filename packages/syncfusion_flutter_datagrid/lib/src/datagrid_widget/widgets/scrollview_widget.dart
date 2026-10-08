@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart' hide DataCell, DataRow;
+import 'package:material_ui/material_ui.dart' hide DataCell, DataRow;
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 

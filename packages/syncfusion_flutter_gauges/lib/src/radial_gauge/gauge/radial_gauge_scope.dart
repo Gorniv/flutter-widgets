@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Radial gauge scope class.
 class RadialGaugeScope extends InheritedWidget {

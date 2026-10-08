@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart' show Color, Offset;
+import 'package:material_ui/material_ui.dart' show Color, Offset;
 
 import '../annotation/annotation.dart';
 import '../annotation/sticky_notes.dart';

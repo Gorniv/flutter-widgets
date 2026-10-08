@@ -13,14 +13,16 @@ screenshots:
     path: screenshots/flutter-calendar-load-more.gif
 
 environment:
-  sdk: ^3.7.0
-  flutter: ">=3.35.1"
+  sdk: ^3.13.0
+  flutter: ">=3.47.0"
 
 flutter:
   assets:
     - packages/timezone/data/latest_all.tzf
 
 dependencies:
+  cupertino_ui: ^1.0.0
+  material_ui: ^1.6.0
   flutter:
     sdk: flutter
   flutter_localizations:

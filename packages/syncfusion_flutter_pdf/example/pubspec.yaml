@@ -3,16 +3,18 @@ description: Demo for creating a PDF file using syncfusion_flutter_pdf package.
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.7.0
+  sdk: ^3.13.0
+  flutter: ">=3.47.0"
 
 flutter:
   uses-material-design: true
 
 dependencies:
+  material_ui: ^1.6.0
   flutter:
     sdk: flutter
   web: ^1.1.0
   open_file: ^3.3.2
   path_provider: ^2.1.2
   syncfusion_flutter_pdf:
-    path: ../
+    path: ..

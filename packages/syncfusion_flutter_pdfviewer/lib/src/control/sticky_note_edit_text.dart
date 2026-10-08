@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../annotation/annotation.dart';
 import '../annotation/sticky_notes.dart';

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'annotation.dart';
 import 'annotation_settings.dart';
 import 'annotation_view.dart' show selectionBorderThickness;

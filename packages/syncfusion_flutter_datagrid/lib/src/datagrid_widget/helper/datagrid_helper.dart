@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:collection/collection.dart';
-import 'package:flutter/material.dart' hide DataCell, DataRow;
+import 'package:material_ui/material_ui.dart' hide DataCell, DataRow;
 import 'package:syncfusion_flutter_core/localizations.dart';
 
 import '../../grid_common/row_column_index.dart';

@@ -8,10 +8,11 @@ screenshots:
     path: screenshots/signature_pad.gif
 
 environment:
-  sdk: ^3.7.0
-  flutter: ">=3.35.1"
+  sdk: ^3.13.0
+  flutter: ">=3.47.0"
 
 dependencies:
+  material_ui: ^1.6.0
   flutter:
     sdk: flutter
   web: ^1.0.0

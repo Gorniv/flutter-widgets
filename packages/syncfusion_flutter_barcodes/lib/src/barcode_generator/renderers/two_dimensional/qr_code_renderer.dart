@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../base/symbology_base.dart';
 import '../../two_dimensional/qr_code_symbology.dart';
 import '../../utils/enum.dart';

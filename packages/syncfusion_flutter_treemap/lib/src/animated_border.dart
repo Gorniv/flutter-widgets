@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Ignore scaling for the tile border.
 class AnimatedBorder extends RoundedRectangleBorder {

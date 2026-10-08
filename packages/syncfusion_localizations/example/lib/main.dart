@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 import 'package:syncfusion_localizations/syncfusion_localizations.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() {
   return runApp(CalendarApp());
@@ -15,7 +14,7 @@ class CalendarApp extends StatelessWidget {
       title: 'Calendar Demo',
       //ignore: always_specify_types
       localizationsDelegates: [
-        GlobalMaterialLocalizations.delegate,
+        ...GlobalMaterialLocalizations.delegates,
         // ... app-specific localization delegate[s] here
         SfGlobalLocalizations.delegate,
       ],
