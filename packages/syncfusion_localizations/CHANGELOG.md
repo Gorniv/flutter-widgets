@@ -1,12 +1,12 @@
 ## Unreleased
 
-* No changes. 
+* No changes.
 
 ## [31.2.15] - 11/25/2025
 
 **General**
 
-*  The compatible version of our Flutter localizations widget has been updated to Flutter SDK 3.38.
+* The compatible version of our Flutter localizations widget has been updated to Flutter SDK 3.38.
 
 ## [31.2.5] - 11/04/2025
 

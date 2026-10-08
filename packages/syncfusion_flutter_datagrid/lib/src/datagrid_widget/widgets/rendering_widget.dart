@@ -1543,10 +1543,13 @@ class RenderVirtualizingCellsWidget extends RenderBox
                   resizingLine.lineIndex < cellRight);
         });
       } else {
-        dataCell = dataRow.visibleColumns.firstWhereOrNull(
-          (DataCellBase element) =>
-              element.columnIndex == resizingLine!.lineIndex,
-        );
+        // Added null check to avoid the exception.
+        if (resizingLine != null) {
+          dataCell = dataRow.visibleColumns.firstWhereOrNull(
+            (DataCellBase element) =>
+                element.columnIndex == resizingLine.lineIndex,
+          );
+        }
       }
     }
     return dataCell;

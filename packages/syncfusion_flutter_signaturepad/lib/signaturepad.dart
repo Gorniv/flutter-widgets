@@ -802,7 +802,9 @@ class RenderSignaturePad extends RenderBox {
   }
 
   void _handleDragStart(DragStartDetails details) {
-    _begin(details.localPosition);
+    // Convert global to local to avoid desync under paint offsets without transforms.
+    final Offset local = globalToLocal(details.globalPosition);
+    _begin(local);
   }
 
   ///Added this method to enable draw support in draggable containers like
@@ -813,8 +815,9 @@ class RenderSignaturePad extends RenderBox {
     if (onDrawStart != null && onDrawStart!()) {
       return;
     }
-
-    _update(details.localPosition);
+    // Convert global to local to avoid desync under paint offsets without transforms.
+    final Offset local = globalToLocal(details.globalPosition);
+    _update(local);
   }
 
   void _handleDragEnd(DragEndDetails details) {
@@ -824,10 +827,9 @@ class RenderSignaturePad extends RenderBox {
   }
 
   void _handleTapUp(TapUpDetails details) {
-    final _TouchPoint touchPoint = _TouchPoint(
-      x: details.localPosition.dx,
-      y: details.localPosition.dy,
-    );
+    // Convert global to local for consistency with drag events.
+    final Offset local = globalToLocal(details.globalPosition);
+    final _TouchPoint touchPoint = _TouchPoint(x: local.dx, y: local.dy);
     final List<_TouchPoint> newPointGroup = <_TouchPoint>[touchPoint];
     if (onDrawStart != null && onDrawStart!()) {
       return;

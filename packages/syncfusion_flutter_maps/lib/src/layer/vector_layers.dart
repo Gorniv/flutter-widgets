@@ -1033,7 +1033,11 @@ class _RenderMapLine extends RenderBox implements MouseTrackerAnnotation {
 
   void _handleTapUp(TapUpDetails details) {
     selectedLine?.onTap?.call();
-    _handleInteraction(details.localPosition);
+    final RenderBox renderBox = context.findRenderObject()! as RenderBox;
+    final Offset localPosition = renderBox.globalToLocal(
+      details.globalPosition,
+    );
+    _handleInteraction(localPosition);
   }
 
   void _handlePointerExit(PointerExitEvent event) {
@@ -2116,7 +2120,11 @@ class _RenderMapArc extends RenderBox implements MouseTrackerAnnotation {
 
   void _handleTapUp(TapUpDetails details) {
     selectedArc.onTap?.call();
-    _handleInteraction(details.localPosition);
+    final RenderBox renderBox = context.findRenderObject()! as RenderBox;
+    final Offset localPosition = renderBox.globalToLocal(
+      details.globalPosition,
+    );
+    _handleInteraction(localPosition);
   }
 
   void _handlePointerExit(PointerExitEvent event) {
@@ -3262,7 +3270,11 @@ class _RenderMapPolyline extends RenderBox implements MouseTrackerAnnotation {
 
   void _handleTapUp(TapUpDetails details) {
     selectedPolyline.onTap?.call();
-    _handleInteraction(details.localPosition);
+    final RenderBox renderBox = context.findRenderObject()! as RenderBox;
+    final Offset localPosition = renderBox.globalToLocal(
+      details.globalPosition,
+    );
+    _handleInteraction(localPosition);
   }
 
   void _handlePointerExit(PointerExitEvent event) {
@@ -4430,7 +4442,11 @@ class _RenderMapPolygon extends RenderBox implements MouseTrackerAnnotation {
 
   void _handleTapUp(TapUpDetails details) {
     _selectedPolygon.onTap?.call();
-    _handleInteraction(details.localPosition);
+    final RenderBox renderBox = context.findRenderObject()! as RenderBox;
+    final Offset localPosition = renderBox.globalToLocal(
+      details.globalPosition,
+    );
+    _handleInteraction(localPosition);
   }
 
   @override
@@ -5690,7 +5706,11 @@ class _RenderMapCircle extends RenderBox implements MouseTrackerAnnotation {
 
   void _handleTapUp(TapUpDetails details) {
     _selectedCircle.onTap?.call();
-    _handleInteraction(details.localPosition);
+    final RenderBox renderBox = context.findRenderObject()! as RenderBox;
+    final Offset localPosition = renderBox.globalToLocal(
+      details.globalPosition,
+    );
+    _handleInteraction(localPosition);
   }
 
   @override

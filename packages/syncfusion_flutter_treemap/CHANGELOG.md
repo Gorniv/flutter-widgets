@@ -1,8 +1,8 @@
 ## Unreleased
 
-* No changes. 
+* No changes.
 
-## [31.2.15] - 11/25/2025	
+## [31.2.15] - 11/25/2025
 
 **General**
 

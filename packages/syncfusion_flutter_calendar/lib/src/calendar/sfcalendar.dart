@@ -3364,7 +3364,7 @@ class _SfCalendarState extends State<SfCalendar>
             _view,
           );
           final double resourceViewSize =
-              isResourceEnabled ? widget.resourceViewSettings.size : 0;
+              isResourceEnabled ? widget.resourceViewSettings.width! : 0;
           if ((!_isRTL && updatedPosition.dx < resourceViewSize) ||
               (_isRTL && updatedPosition.dx > _minWidth - resourceViewSize)) {
             final double viewHeaderHeight =
@@ -5452,12 +5452,10 @@ class _SfCalendarState extends State<SfCalendar>
     if (localPosition.dy < widget.headerHeight) {
       _updateMouseHoveringForHeader(localPosition);
     } else {
+      final double resourceViewSize = widget.resourceViewSettings.width!;
       if (isResourceEnabled &&
-          ((isRTL &&
-                  localPosition.dx >
-                      (_minWidth - widget.resourceViewSettings.size)) ||
-              (!isRTL &&
-                  localPosition.dx < widget.resourceViewSettings.size)) &&
+          ((isRTL && localPosition.dx > (_minWidth - resourceViewSize)) ||
+              (!isRTL && localPosition.dx < resourceViewSize)) &&
           localPosition.dy > startPosition! &&
           (CalendarViewHelper.shouldRaiseCalendarTapCallback(widget.onTap) ||
               CalendarViewHelper.shouldRaiseCalendarLongPressCallback(
@@ -9552,7 +9550,7 @@ class _SfCalendarState extends State<SfCalendar>
       _view,
     );
     final double resourceViewSize =
-        isResourceEnabled ? widget.resourceViewSettings.size : 0;
+        isResourceEnabled ? widget.resourceViewSettings.width! : 0;
     final DateTime currentViewDate =
         _currentViewVisibleDates[(_currentViewVisibleDates.length / 2)
             .truncate()];

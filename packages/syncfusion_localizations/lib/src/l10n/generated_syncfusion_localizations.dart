@@ -822,10 +822,10 @@ class SfLocalizationsAr extends SfGlobalLocalizations {
   String get greaterThanOrEqualDataGridFilteringLabel => r'أكبر من أو يساوي';
 
   @override
-  String get jumada1Label => r'جمادى الأولى';
+  String get jumada1Label => r'جمادى الاول';
 
   @override
-  String get jumada2Label => r'جمادى الآخرة';
+  String get jumada2Label => r'جمادى الثانية';
 
   @override
   String get lessThanDataGridFilteringLabel => r'أقل من';
@@ -834,7 +834,7 @@ class SfLocalizationsAr extends SfGlobalLocalizations {
   String get lessThanOrEqualDataGridFilteringLabel => r'اصغر من او يساوي';
 
   @override
-  String get muharramLabel => r'محرم';
+  String get muharramLabel => r'شهر محرم';
 
   @override
   String get noEventsCalendarLabel => r'لا أحداث';
@@ -954,7 +954,7 @@ class SfLocalizationsAr extends SfGlobalLocalizations {
   String get rabi1Label => r'ربيع الأول';
 
   @override
-  String get rabi2Label => r'ربيع الآخر';
+  String get rabi2Label => r'ربيع الثاني';
 
   @override
   String get rajabLabel => r'رجب';
@@ -966,7 +966,7 @@ class SfLocalizationsAr extends SfGlobalLocalizations {
   String get rowsPerPageDataPagerLabel => r'الصفوف لكل صفحة';
 
   @override
-  String get safarLabel => r'صفر';
+  String get safarLabel => r'سفر';
 
   @override
   String get searchDataGridFilteringLabel => r'يبحث';
@@ -993,34 +993,35 @@ class SfLocalizationsAr extends SfGlobalLocalizations {
   String get shortDhualqiLabel => r'ذو القعدة';
 
   @override
-  String get shortJumada1Label => r'جمادى الأولى';
+  String get shortJumada1Label => r'جم. أنا';
 
   @override
-  String get shortJumada2Label => r'جمادى الآخرة';
+  String get shortJumada2Label => r'جم. ثانيًا';
 
   @override
-  String get shortMuharramLabel => r'محرم';
+  String get shortMuharramLabel => r'موه.';
 
   @override
-  String get shortRabi1Label => r'ربيع الأول';
+  String get shortRabi1Label => r'ربيع. أنا';
 
   @override
-  String get shortRabi2Label => r'ربيع الآخر';
+  String get shortRabi2Label => r'ربيع. ثانيًا';
 
   @override
-  String get shortRajabLabel => r'رجب';
+  String get shortRajabLabel => r'راج.';
 
   @override
-  String get shortRamadanLabel => r'رمضان';
+  String get shortRamadanLabel =>
+      r'الرامات الذاكرة العشوائية في الهواتف والحواسيب.';
 
   @override
-  String get shortSafarLabel => r'صفر';
+  String get shortSafarLabel => r'ساف.';
 
   @override
-  String get shortShaabanLabel => r'شعبان';
+  String get shortShaabanLabel => r'شا.';
 
   @override
-  String get shortShawwalLabel => r'شوال';
+  String get shortShawwalLabel => r'شو.';
 
   @override
   String get showRowsWhereDataGridFilteringLabel => r'إظهار الصفوف حيث';
@@ -4709,10 +4710,10 @@ class SfLocalizationsEn extends SfGlobalLocalizations {
   String get daySpanCountLabel => r'Day';
 
   @override
-  String get dhualhiLabel => "Dhu'l-Hijjah";
+  String get dhualhiLabel => r'Dhu al-Hijjah';
 
   @override
-  String get dhualqiLabel => "Dhu'l-Qi'dah";
+  String get dhualqiLabel => "Dhu al-Qi'dah";
 
   @override
   String get doesNotBeginWithDataGridFilteringLabel => r'Does Not Begin With';
@@ -4746,10 +4747,10 @@ class SfLocalizationsEn extends SfGlobalLocalizations {
       r'Greater Than Or Equal';
 
   @override
-  String get jumada1Label => r'Jumada I';
+  String get jumada1Label => r'Jumada al-awwal';
 
   @override
-  String get jumada2Label => r'Jumada II';
+  String get jumada2Label => r'Jumada al-thani';
 
   @override
   String get lessThanDataGridFilteringLabel => r'Less Than';
@@ -4879,13 +4880,13 @@ class SfLocalizationsEn extends SfGlobalLocalizations {
   String get rabi1Label =>
       r'Rabi'
       "'"
-      r' I';
+      r' al-awwal';
 
   @override
   String get rabi2Label =>
       r'Rabi'
       "'"
-      r' II';
+      r' al-thani';
 
   @override
   String get rajabLabel => r'Rajab';
@@ -4915,7 +4916,7 @@ class SfLocalizationsEn extends SfGlobalLocalizations {
   String get shaabanLabel =>
       r'Sha'
       "'"
-      r'ban';
+      r'aban';
 
   @override
   String get shawwalLabel => r'Shawwal';
@@ -4942,10 +4943,10 @@ class SfLocalizationsEn extends SfGlobalLocalizations {
   String get shortMuharramLabel => r'Muh.';
 
   @override
-  String get shortRabi1Label => r'Rab. I';
+  String get shortRabi1Label => r'Rabi. I';
 
   @override
-  String get shortRabi2Label => r'Rab. II';
+  String get shortRabi2Label => r'Rabi. II';
 
   @override
   String get shortRajabLabel => r'Raj.';

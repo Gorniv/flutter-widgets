@@ -133,8 +133,9 @@ List<int> getSpannedCellStartAndEndIndex({
   if (firstColumnIndex > startColumnIndex) {
     // Updates the first and last column index if any exclude column exists
     // before the `firstColumnIndex`.
-    excludeColumnsCount =
-        excludeColumnIndexes.where((int index) => index < columnIndex).length;
+    excludeColumnsCount = excludeColumnIndexes
+        .where((int index) => index < columnIndex)
+        .length;
 
     firstColumnIndex = max(
       startColumnIndex,
@@ -147,13 +148,12 @@ List<int> getSpannedCellStartAndEndIndex({
   }
 
   // To remove the in-between excluded columns from the `lastColumnIndex`.
-  excludeColumnsCount =
-      excludeColumnIndexes
-          .where(
-            (int index) =>
-                index >= columnIndex && index <= columnIndex + columnSpan,
-          )
-          .length;
+  excludeColumnsCount = excludeColumnIndexes
+      .where(
+        (int index) =>
+            index >= columnIndex && index <= columnIndex + columnSpan,
+      )
+      .length;
   lastColumnIndex -= excludeColumnsCount;
 
   return <int>[firstColumnIndex, lastColumnIndex];
@@ -188,12 +188,9 @@ int getSummaryColumnIndex(
     return -1;
   }
 
-  final List<GridColumn> visibleColumns =
-      columns
-          .where(
-            (GridColumn column) => !excludeColumns.contains(column.columnName),
-          )
-          .toList();
+  final List<GridColumn> visibleColumns = columns
+      .where((GridColumn column) => !excludeColumns.contains(column.columnName))
+      .toList();
   final GridColumn? column = visibleColumns.firstWhereOrNull(
     (GridColumn element) => element.columnName == columnName,
   );

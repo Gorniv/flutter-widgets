@@ -1,5 +1,13 @@
 ## Unreleased
 
+## Date Picker
+
+**Bugs**
+
+* Fixed tap and drag issues in the Date Range Picker that occurred when it was shifted from its normal position using an offset. Date selection and gestures now work accurately.
+
+## [32.1.25] - 01/27/2026
+
 * No changes.
 
 ## [31.2.15] - 11/25/2025

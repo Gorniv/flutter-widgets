@@ -1,6 +1,10 @@
 ## Unreleased
 
-* No changes.
+## SfChat
+
+**Bugs**
+
+* Fixed misalignment of consecutive messages when using a messageAvatarBuilder by removing the extra avatar gap.
 
 ## [31.2.15] - 11/25/2025
 

@@ -1,8 +1,16 @@
 ## Unreleased
 
-* No changes. 
+## SignaturePad
 
-## [31.2.16] - 12/06/2025
+**Bugs**
+
+* Fixed pointer offset issues when hosted inside paint-offset parents. Pointer events now use globalToLocal to compute accurate stroke and tap coordinates, so the ink aligns correctly with touch or mouse input.
+
+## [32.1.25] - 01/27/2026
+
+* No changes.
+
+## [31.2.15] - 12/02/2025
 
 **Enhancements**
 
